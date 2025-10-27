@@ -1,3 +1,5 @@
+import os
+
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -9,6 +11,15 @@ from .database import Base, engine, get_db
 from .models import User
 
 app = FastAPI(title="Warmup API", version="0.1.0")
+
+# مسار مجلد الواجهة
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.isdir(static_dir):
+    app.mount("/app", StaticFiles(directory=static_dir, html=True), name="app_static")
+
+    @app.get("/ui")
+    def redirect_to_ui() -> RedirectResponse:
+        return RedirectResponse(url="/app/index.html")
 
 
 @app.on_event("startup")
@@ -67,13 +78,3 @@ def list_users(db: Session = Depends(get_db)) -> list[User]:
 
     users = db.query(User).all()
     return users
-
-
-app.mount("/app", StaticFiles(directory="app/static", html=True), name="app_static")
-
-
-@app.get("/ui", include_in_schema=False)
-def ui_redirect() -> RedirectResponse:
-    """Redirect to the static user interface."""
-
-    return RedirectResponse(url="/app/index.html")
