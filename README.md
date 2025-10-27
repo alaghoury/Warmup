@@ -29,6 +29,14 @@ pip install -r requirements.txt
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
+Or use Docker Compose from the repository root:
+
+```bash
+docker compose -f ops/docker-compose.yml up -d db redis
+docker compose -f ops/docker-compose.yml run --rm backend alembic upgrade head
+docker compose -f ops/docker-compose.yml up -d backend
+```
+
 The API root responds with:
 
 ```bash
