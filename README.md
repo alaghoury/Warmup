@@ -1,57 +1,74 @@
-# Warmup Backend
+# Warmup SaaS
 
-This repository contains a minimal FastAPI backend located under the [`backend/`](backend/) directory.
+This repository scaffolds the foundations of the Warmup SaaS platform. It currently provides a Python/FastAPI backend with SQLAlchemy models, versioned API routers, and Alembic migrations, along with placeholders for a future React frontend and deployment assets.
 
-## Getting started
+## Project structure
+
+```
+backend/          # FastAPI application, database layer, Alembic configuration
+frontend/         # (placeholder) React app will live here
+ops/              # Dockerfiles, compose stack, and edge proxy configuration
+tests/            # Automated test suites
+```
+
+## Backend development
 
 ### Prerequisites
 
 - Python 3.11+
 - [pip](https://pip.pypa.io/)
 
-### Setup and run locally
+### Run locally
 
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate  # On Windows use `.venv\\Scripts\\activate`
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install --upgrade pip
 pip install -r requirements.txt
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-The API will be available at http://127.0.0.1:8000. Test it with:
+The API root responds with:
 
 ```bash
 curl http://127.0.0.1:8000/
-curl http://127.0.0.1:8000/health
+# {"message": "Warmup SaaS OK"}
 ```
 
-### Docker
+Versioned endpoints are available under `/api/v1`, for example `GET /api/v1/users`, `POST /api/v1/accounts`, and `POST /api/v1/tasks`.
 
-You can also run the backend with Docker:
+### Database migrations
+
+Alembic is configured under `backend/alembic/`. To create and run migrations:
 
 ```bash
 cd backend
-docker build -t warmup-backend .
-docker run --rm -p 8000:8000 warmup-backend
+alembic revision -m "describe change"
+alembic upgrade head
 ```
 
-### Docker Compose
+Ensure the `DATABASE_URL` environment variable is set, otherwise the default Postgres connection from `app.config.Settings` is used.
 
-The repository ships with a [`docker-compose.yml`](docker-compose.yml) that builds and runs the backend service in development mode with auto-reload.
+### Docker and Compose stack
 
-```bash
-docker compose up --build
-```
+The `ops/` directory centralizes container tooling.
 
-This exposes the API on port `8000` and uses the `DATABASE_URL` environment variable configured in the compose file (pointing to the SQLite database shipped with the project).
+- Build and run the backend container only:
+  ```bash
+  docker build -f ops/Dockerfile.backend -t warmup-backend ..
+  docker run --rm -p 8000:8000 warmup-backend
+  ```
+- Start the full stack (Postgres, Redis, backend, worker, placeholder frontend, Caddy proxy):
+  ```bash
+  cd ops
+  docker compose up --build
+  ```
 
-## Available endpoints
+## Frontend placeholder
 
-- `GET /` – returns `{ "message": "Warmup API OK" }`
-- `GET /health` – returns `{ "status": "healthy" }`
+A future React application will be mounted under `backend/app/static` and surfaced through the `/ui` redirect once assets are added. For now the directory only contains a `.gitkeep` marker to track the path.
 
-## Frontend UI
+## Tests
 
-The project includes a lightweight static page for interacting with the user API. After starting the backend with any of the methods above, open [http://127.0.0.1:8000/ui](http://127.0.0.1:8000/ui) in your browser to access the interface.
+Placeholder tests live in `tests/backend/`. Run them with your preferred test runner (e.g. `pytest`). Additional coverage will be added as features mature.

@@ -1,21 +1,15 @@
-from functools import lru_cache
-
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    """Application configuration loaded from environment variables or .env."""
+    APP_NAME: str = "Warmup SaaS"
+    API_PREFIX: str = "/api/v1"
+    DATABASE_URL: str = "postgresql+psycopg://postgres:postgres@db:5432/warmup"
+    REDIS_URL: str = "redis://redis:6379/0"
+    ENV: str = "dev"
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
-
-    DATABASE_URL: str = "sqlite:///./app.db"
-
-
-@lru_cache
-def get_settings() -> Settings:
-    """Return a cached instance of the application settings."""
-
-    return Settings()
+    class Config:
+        env_file = ".env"
 
 
-settings = get_settings()
+settings = Settings()

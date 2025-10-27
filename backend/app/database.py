@@ -1,25 +1,17 @@
-from collections.abc import Generator
-
 from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
-
+from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from .config import settings
 
 
-connect_args = {"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {}
-engine = create_engine(settings.DATABASE_URL, connect_args=connect_args)
-
-
 class Base(DeclarativeBase):
-    """Base class for SQLAlchemy models."""
+    pass
 
 
-SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
-def get_db() -> Generator[Session, None, None]:
-    """Yield a database session that is properly closed after use."""
-
+def get_db():
     db = SessionLocal()
     try:
         yield db
