@@ -35,5 +35,15 @@ services:
     volumes:
       - ../backend:/app/backend
 
+  caddy:
+    image: caddy:2-alpine
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../backend/app/static:/srv/static:ro
+
 volumes:
   pgdata:
