@@ -8,8 +8,12 @@ from .models import User
 
 app = FastAPI(title="Warmup API", version="0.1.0")
 
-# Ensure database tables are created at startup
-Base.metadata.create_all(bind=engine)
+
+@app.on_event("startup")
+def on_startup() -> None:
+    """Create database tables when the application starts."""
+
+    Base.metadata.create_all(bind=engine)
 
 
 class UserCreate(BaseModel):
