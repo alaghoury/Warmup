@@ -1,4 +1,6 @@
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -65,3 +67,13 @@ def list_users(db: Session = Depends(get_db)) -> list[User]:
 
     users = db.query(User).all()
     return users
+
+
+app.mount("/app", StaticFiles(directory="app/static", html=True), name="app_static")
+
+
+@app.get("/ui", include_in_schema=False)
+def ui_redirect() -> RedirectResponse:
+    """Redirect to the static user interface."""
+
+    return RedirectResponse(url="/app/index.html")

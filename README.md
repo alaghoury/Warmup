@@ -51,3 +51,7 @@ This exposes the API on port `8000` and uses the `DATABASE_URL` environment vari
 
 - `GET /` – returns `{ "message": "Warmup API OK" }`
 - `GET /health` – returns `{ "status": "healthy" }`
+
+## Frontend UI
+
+The project includes a lightweight static page for interacting with the user API. After starting the backend with any of the methods above, open [http://127.0.0.1:8000/ui](http://127.0.0.1:8000/ui) in your browser to access the interface.
