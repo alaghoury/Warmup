@@ -35,6 +35,19 @@ docker build -t warmup-backend .
 docker run --rm -p 8000:8000 warmup-backend
 ```
 
+### Docker Compose
+
+The repository ships with a [`docker-compose.yml`](docker-compose.yml) that
+builds and runs the backend service in development mode with auto-reload.
+
+```bash
+docker compose up --build
+```
+
+This exposes the API on port `8000` and uses the `DATABASE_URL` environment
+variable configured in the compose file (pointing to the SQLite database
+shipped with the project).
+
 ## Available endpoints
 
 - `GET /` – returns `{ "message": "Warmup API OK" }`
