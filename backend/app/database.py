@@ -1,32 +1,20 @@
-"""Database configuration for the Warmup application."""
-from __future__ import annotations
-
-from pathlib import Path
-
+# ✅ Codex-correct version
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
+from .config import settings
 
-# SQLite database file stored alongside this module
-_DB_FILE = Path(__file__).resolve().parent / "warmup.db"
-_DATABASE_URL = f"sqlite:///{_DB_FILE}"
+SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
 
-# SQLite needs ``check_same_thread`` disabled for use with FastAPI's async workers.
 engine = create_engine(
-    _DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    future=True,
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False} if SQLALCHEMY_DATABASE_URL.startswith("sqlite") else {}
 )
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-
 def get_db():
-    """Yield a SQLAlchemy session and ensure it is closed afterwards."""
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-
-
-__all__ = ["Base", "engine", "SessionLocal", "get_db"]

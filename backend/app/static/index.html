@@ -1,176 +1,78 @@
+<!-- ✅ Codex-correct version -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Warmup Users</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
-      color-scheme: light dark;
-    }
-    body {
-      font-family: Arial, sans-serif;
-      background: #f7f7f7;
-      margin: 0;
-      padding: 40px;
-    }
-    h1 {
-      color: #1f2933;
-      margin-bottom: 20px;
-    }
-    form {
-      background: #ffffff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      max-width: 320px;
-    }
-    input {
-      padding: 10px;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    button {
-      background: #2563eb;
-      color: #ffffff;
-      border: none;
-      padding: 10px 14px;
-      border-radius: 6px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
-    button:hover {
-      background: #1d4ed8;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 30px;
-      background: #ffffff;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    }
-    th, td {
-      padding: 12px;
-      border-bottom: 1px solid #e2e8f0;
-      text-align: left;
-      font-size: 14px;
-    }
-    th {
-      background: #eff6ff;
-      color: #1f2937;
-    }
-    tr:last-child td {
-      border-bottom: none;
-    }
-    .delete-btn {
-      background: #ef4444;
-    }
-    .delete-btn:hover {
-      background: #dc2626;
-    }
-    #status {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #2563eb;
-    }
+    body { font-family: system-ui, Arial, sans-serif; max-width: 820px; margin: 40px auto; padding: 0 16px; }
+    h1 { margin-bottom: 8px; }
+    .row { display: flex; gap: 8px; margin: 12px 0; }
+    input { padding: 8px; flex: 1; }
+    button { padding: 8px 14px; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { text-align: left; background: #f8f8f8; }
   </style>
 </head>
 <body>
   <h1>Warmup Users</h1>
-  <form id="user-form">
-    <input type="text" id="name" name="name" placeholder="Name" required />
-    <input type="email" id="email" name="email" placeholder="Email" required />
-    <button type="submit">Add User</button>
-  </form>
-  <div id="status"></div>
+  <p>Simple demo UI powered by FastAPI.</p>
+
+  <div class="row">
+    <input id="name" placeholder="Name" />
+    <input id="email" placeholder="Email" />
+    <button onclick="addUser()">Add User</button>
+  </div>
+
   <table>
     <thead>
-      <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Actions</th>
-      </tr>
+      <tr><th>ID</th><th>Name</th><th>Email</th><th>Actions</th></tr>
     </thead>
-    <tbody id="users-body"></tbody>
+    <tbody id="tbody"></tbody>
   </table>
-  <script>
-    const API_BASE = "/users";
-    const status = document.getElementById("status");
-    const tbody = document.getElementById("users-body");
-    const form = document.getElementById("user-form");
 
-    async function fetchUsers() {
-      try {
-        const res = await fetch(API_BASE);
-        if (!res.ok) throw new Error("Failed to fetch users");
-        const users = await res.json();
-        tbody.innerHTML = "";
-        users.forEach((user) => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${user.id}</td>
-            <td>${user.name}</td>
-            <td>${user.email}</td>
-            <td><button class="delete-btn" data-id="${user.id}">Delete</button></td>
-          `;
-          tbody.appendChild(row);
-        });
-      } catch (err) {
-        status.textContent = err.message;
-      }
+  <script>
+    const API = location.origin;
+
+    async function loadUsers() {
+      const res = await fetch(`${API}/users`);
+      const data = await res.json();
+      const tbody = document.getElementById("tbody");
+      tbody.innerHTML = data.map(u => `
+        <tr>
+          <td>${u.id}</td>
+          <td>${u.name}</td>
+          <td>${u.email}</td>
+          <td><button onclick="delUser(${u.id})">Delete</button></td>
+        </tr>
+      `).join("");
     }
 
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      status.textContent = "";
-      const payload = {
-        name: form.name.value.trim(),
-        email: form.email.value.trim(),
-      };
-      if (!payload.name || !payload.email) {
-        status.textContent = "Both name and email are required";
-        return;
-      }
-      try {
-        const res = await fetch(API_BASE, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.detail || "Failed to add user");
-        }
-        form.reset();
-        await fetchUsers();
-      } catch (err) {
-        status.textContent = err.message;
-      }
-    });
+    async function addUser() {
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      if (!name || !email) { alert("Enter name & email"); return; }
+      const res = await fetch(`${API}/users`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ name, email })
+      });
+      if (res.status === 409) { alert("Email already exists"); return; }
+      if (!res.ok) { alert("Error adding user"); return; }
+      document.getElementById("name").value = "";
+      document.getElementById("email").value = "";
+      loadUsers();
+    }
 
-    tbody.addEventListener("click", async (event) => {
-      const target = event.target;
-      if (target instanceof HTMLButtonElement && target.dataset.id) {
-        const userId = target.dataset.id;
-        try {
-          const res = await fetch(`${API_BASE}/${userId}`, { method: "DELETE" });
-          if (!res.ok) throw new Error("Failed to delete user");
-          await fetchUsers();
-        } catch (err) {
-          status.textContent = err.message;
-        }
-      }
-    });
+    async function delUser(id) {
+      const res = await fetch(`${API}/users/${id}`, { method: "DELETE" });
+      if (!res.ok) { alert("Delete failed"); return; }
+      loadUsers();
+    }
 
-    fetchUsers();
+    loadUsers();
   </script>
 </body>
 </html>

@@ -1,39 +1,34 @@
-"""FastAPI application exposing CRUD endpoints for users."""
-from __future__ import annotations
-
-from datetime import datetime
+# ✅ Codex-correct version
+from pathlib import Path
 from typing import List
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, EmailStr
-from sqlalchemy.exc import IntegrityError
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
+from pydantic import BaseModel, EmailStr, ConfigDict
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
+from .config import settings
 from .database import Base, engine, get_db
-from . import models
+from .models import User
 
-
+# ---- Pydantic Schemas (v2) ----
 class UserCreate(BaseModel):
-    """Payload used to create a new user."""
-
     name: str
     email: EmailStr
 
-
-class UserRead(UserCreate):
-    """Response model representing a persisted user."""
-
+class UserRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
-    created_at: datetime
+    name: str
+    email: EmailStr
 
-    class Config:
-        from_attributes = True
+# ---- App ----
+app = FastAPI(title=settings.APP_NAME)
 
-
-app = FastAPI(title="Warmup API")
-
-# Allow the React frontend (or any origin during development) to communicate with the API.
+# CORS (open for local dev/React)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -42,42 +37,48 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Ensure database tables exist on startup.
+# Create tables on startup if not exist
 Base.metadata.create_all(bind=engine)
 
+# Mount static files
+static_dir = Path(__file__).parent / "static"
+static_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+@app.get("/", include_in_schema=False)
+def root():
+    return {"app": settings.APP_NAME, "ok": True}
+
+@app.get("/ui", include_in_schema=False)
+def serve_ui():
+    return RedirectResponse(url="/static/index.html")
+
+# ---- Users Endpoints ----
+@app.get("/users", response_model=List[UserRead])
+def list_users(db: Session = Depends(get_db)):
+    users = db.query(User).order_by(User.id.desc()).all()
+    return users
 
 @app.post("/users", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-def create_user(payload: UserCreate, db: Session = Depends(get_db)) -> models.User:
-    """Insert a new user record into the database."""
-
-    user = models.User(name=payload.name, email=payload.email)
-    db.add(user)
+def create_user(payload: UserCreate, db: Session = Depends(get_db)):
+    u = User(name=payload.name, email=str(payload.email))
+    db.add(u)
     try:
         db.commit()
-    except IntegrityError as exc:
+    except IntegrityError:
         db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User with this email already exists",
-        ) from exc
-    db.refresh(user)
-    return user
-
-
-@app.get("/users", response_model=List[UserRead])
-def list_users(db: Session = Depends(get_db)) -> List[models.User]:
-    """Return all stored users."""
-
-    return db.query(models.User).all()
-
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email already exists"
+        )
+    db.refresh(u)
+    return u
 
 @app.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(user_id: int, db: Session = Depends(get_db)) -> None:
-    """Remove a user from the database if present."""
-
-    user = db.get(models.User, user_id)
-    if user is None:
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    u = db.query(User).filter(User.id == user_id).first()
+    if not u:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    db.delete(user)
+    db.delete(u)
     db.commit()
-
+    return
