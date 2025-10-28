@@ -1,7 +1,6 @@
 :root {
-  color-scheme: light;
-  font-family: 'Inter', system-ui, sans-serif;
-  background: #f5f6fa;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f4f5f7;
   color: #1f2933;
 }
 
@@ -9,140 +8,91 @@ body {
   margin: 0;
 }
 
-main.layout {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 2.5rem 1.5rem 3rem;
+.app {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 3rem 1.5rem;
 }
 
-header {
+.users-page {
+  width: min(720px, 100%);
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.1);
+  padding: 2rem;
+}
+
+.users-page h1 {
+  margin: 0 0 1.5rem;
+  font-size: 2rem;
+}
+
+.users-form {
+  display: grid;
+  gap: 1rem;
   margin-bottom: 2rem;
 }
 
-header h1 {
-  margin: 0 0 0.5rem;
-  font-size: 2.25rem;
-}
-
-header p {
-  margin: 0;
-  color: #4a5568;
-}
-
-.alert {
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  font-weight: 500;
-}
-
-.alert.error {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-.alert.success {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.panels {
-  display: grid;
-  gap: 1.5rem;
-}
-
-@media (min-width: 960px) {
-  .panels {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-article {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 1.25rem;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
-  display: flex;
-  flex-direction: column;
-}
-
-article h2 {
-  margin: 0 0 0.25rem;
-}
-
-article p {
-  margin: 0 0 1rem;
-  color: #64748b;
-}
-
-form {
-  display: grid;
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
-}
-
-label {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.95rem;
-  gap: 0.4rem;
-  font-weight: 600;
-  color: #334155;
-}
-
-input,
-select {
-  padding: 0.55rem 0.65rem;
-  border-radius: 8px;
+.users-form input {
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
   border: 1px solid #d1d5db;
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
-button {
+.users-form button {
   justify-self: flex-start;
-  padding: 0.5rem 1.25rem;
+  padding: 0.7rem 1.6rem;
   border-radius: 999px;
   border: none;
-  font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
   background: #2563eb;
   color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
   transition: background 0.2s ease;
 }
 
-button:hover {
+.users-form button:hover {
   background: #1d4ed8;
 }
 
-table {
+.error {
+  margin: -1rem 0 1.5rem;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.users-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.95rem;
 }
 
-th,
-td {
-  padding: 0.6rem 0.5rem;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-th {
+.users-table th,
+.users-table td {
+  padding: 0.75rem 0.65rem;
+  border-bottom: 1px solid #e5e7eb;
   text-align: left;
-  color: #475569;
-  font-size: 0.85rem;
+}
+
+.users-table th {
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  color: #4b5563;
 }
 
-tbody tr:last-child td {
-  border-bottom: none;
+.users-table button {
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  border: none;
+  background: #ef4444;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-tr:nth-child(even) td {
-  background: #f8fafc;
-}
-
-select:invalid {
-  color: #94a3b8;
+.users-table button:hover {
+  background: #dc2626;
 }
