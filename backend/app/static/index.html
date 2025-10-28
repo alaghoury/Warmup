@@ -34,7 +34,7 @@
   </table>
 
   <script>
-    const API = location.origin;
+    const API = `${location.origin}/api`;
 
     async function loadUsers() {
       const res = await fetch(`${API}/users`);

@@ -54,12 +54,17 @@ def serve_ui():
     return RedirectResponse(url="/static/index.html")
 
 # ---- Users Endpoints ----
-@app.get("/users", response_model=List[UserRead])
+@app.get("/api/health", include_in_schema=False)
+def api_health():
+    return {"status": "ok", "app": settings.APP_NAME}
+
+
+@app.get("/api/users", response_model=List[UserRead])
 def list_users(db: Session = Depends(get_db)):
     users = db.query(User).order_by(User.id.desc()).all()
     return users
 
-@app.post("/users", response_model=UserRead, status_code=status.HTTP_201_CREATED)
+@app.post("/api/users", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 def create_user(payload: UserCreate, db: Session = Depends(get_db)):
     u = User(name=payload.name, email=str(payload.email))
     db.add(u)
@@ -74,7 +79,7 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
     db.refresh(u)
     return u
 
-@app.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@app.delete("/api/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     u = db.query(User).filter(User.id == user_id).first()
     if not u:
