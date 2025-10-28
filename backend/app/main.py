@@ -28,10 +28,12 @@ class UserRead(BaseModel):
 # ---- App ----
 app = FastAPI(title=settings.APP_NAME)
 
-# CORS (open for local dev/React)
+# CORS (allow Vite dev server)
+origins = ["http://localhost:5173"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
