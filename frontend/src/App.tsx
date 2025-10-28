@@ -1,32 +1,15 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 
 const API_BASE = '/api/v1';
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-}
+type User = { id: number; name: string; email: string };
+type Account = { id: number; label: string; status: string };
+type Task = { id: number; account_id: number; kind: string; state: string };
 
-interface Account {
-  id: number;
-  label: string;
-  status: string;
-}
-
-interface Task {
-  id: number;
-  account_id: number;
-  kind: string;
-  state: string;
-}
-
-interface TaskCreateResponse extends Task {}
-
-async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(url, {
-    headers: { 'Content-Type': 'application/json', ...(options?.headers ?? {}) },
-    ...options
+async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(path, {
+    headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
+    ...init
   });
 
   if (!response.ok) {
@@ -46,276 +29,240 @@ export default function App() {
   const [accountForm, setAccountForm] = useState({ label: '' });
   const [taskForm, setTaskForm] = useState({ accountId: '', kind: 'email' });
 
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const accountOptions = useMemo(() =>
-    accounts.map((account) => ({ value: String(account.id), label: account.label })),
-  [accounts]);
-
-  const loadUsers = useCallback(async () => {
-    try {
-      const data = await apiFetch<User[]>(`${API_BASE}/users`);
-      setUsers(data);
-    } catch (error) {
-      console.error(error);
-      setErrorMessage('Failed to fetch users');
-    }
-  }, []);
-
-  const loadAccounts = useCallback(async () => {
-    try {
-      const data = await apiFetch<Account[]>(`${API_BASE}/accounts`);
-      setAccounts(data);
-    } catch (error) {
-      console.error(error);
-      setErrorMessage('Failed to fetch accounts');
-    }
-  }, []);
-
-  const loadTasks = useCallback(async () => {
-    try {
-      const data = await apiFetch<Task[]>(`${API_BASE}/tasks`);
-      setTasks(data);
-    } catch (error) {
-      console.error(error);
-      setErrorMessage('Failed to fetch tasks');
-    }
-  }, []);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
-    loadUsers();
-    loadAccounts();
-    loadTasks();
-  }, [loadUsers, loadAccounts, loadTasks]);
+    Promise.all([
+      fetchJson<User[]>(`${API_BASE}/users`).then(setUsers),
+      fetchJson<Account[]>(`${API_BASE}/accounts`).then(setAccounts),
+      fetchJson<Task[]>(`${API_BASE}/tasks`).then(setTasks)
+    ]).catch((err) => {
+      console.error(err);
+      setError('Failed to load initial data. Ensure the backend is running.');
+    });
+  }, []);
 
-  const handleUserSubmit = async (event: FormEvent) => {
+  const handleUserSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setErrorMessage(null);
-    setStatusMessage(null);
+    setError(null);
+    setNotice(null);
+
     try {
-      await apiFetch<User>(`${API_BASE}/users`, {
+      const payload = { name: userForm.name.trim(), email: userForm.email.trim() };
+      const created = await fetchJson<User>(`${API_BASE}/users`, {
         method: 'POST',
-        body: JSON.stringify({ name: userForm.name.trim(), email: userForm.email.trim() })
+        body: JSON.stringify(payload)
       });
+      setUsers((prev) => [...prev, created]);
       setUserForm({ name: '', email: '' });
-      setStatusMessage('User added successfully.');
-      loadUsers();
-    } catch (error) {
-      console.error(error);
-      setErrorMessage('Failed to add user.');
+      setNotice('User added successfully.');
+    } catch (err) {
+      console.error(err);
+      setError('Unable to create user.');
     }
   };
 
-  const handleAccountSubmit = async (event: FormEvent) => {
+  const handleAccountSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setErrorMessage(null);
-    setStatusMessage(null);
+    setError(null);
+    setNotice(null);
+
     try {
-      await apiFetch<Account>(`${API_BASE}/accounts`, {
+      const payload = { label: accountForm.label.trim() };
+      const created = await fetchJson<Account>(`${API_BASE}/accounts`, {
         method: 'POST',
-        body: JSON.stringify({ label: accountForm.label.trim() })
+        body: JSON.stringify(payload)
       });
+      setAccounts((prev) => [...prev, created]);
       setAccountForm({ label: '' });
-      setStatusMessage('Account created successfully.');
-      loadAccounts();
-    } catch (error) {
-      console.error(error);
-      setErrorMessage('Failed to create account.');
+      setNotice('Account created successfully.');
+    } catch (err) {
+      console.error(err);
+      setError('Unable to create account.');
     }
   };
 
-  const handleTaskSubmit = async (event: FormEvent) => {
+  const handleTaskSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setErrorMessage(null);
-    setStatusMessage(null);
+    setError(null);
+    setNotice(null);
 
     if (!taskForm.accountId) {
-      setErrorMessage('Select an account for the task.');
+      setError('Please choose an account.');
       return;
     }
 
     try {
-      await apiFetch<TaskCreateResponse>(`${API_BASE}/tasks`, {
+      const payload = {
+        account_id: Number(taskForm.accountId),
+        kind: taskForm.kind
+      };
+      const created = await fetchJson<Task>(`${API_BASE}/tasks`, {
         method: 'POST',
-        body: JSON.stringify({
-          account_id: Number(taskForm.accountId),
-          kind: taskForm.kind
-        })
+        body: JSON.stringify(payload)
       });
+      setTasks((prev) => [...prev, created]);
       setTaskForm({ accountId: '', kind: 'email' });
-      setStatusMessage('Task created successfully.');
-      loadTasks();
-    } catch (error) {
-      console.error(error);
-      setErrorMessage('Failed to create task.');
+      setNotice('Task created successfully.');
+    } catch (err) {
+      console.error(err);
+      setError('Unable to create task.');
     }
   };
 
   return (
-    <main>
-      <h1>Warmup SaaS Control Panel</h1>
-      <p>Manage your users, accounts, and warming tasks against the backend API.</p>
+    <main className="layout">
+      <header>
+        <h1>Warmup SaaS</h1>
+        <p>Interact with the FastAPI backend through a simple dashboard.</p>
+      </header>
 
-      {statusMessage ? <div className="success">{statusMessage}</div> : null}
-      {errorMessage ? <div className="error">{errorMessage}</div> : null}
+      {error ? <div className="alert error">{error}</div> : null}
+      {notice ? <div className="alert success">{notice}</div> : null}
 
-      <section>
-        <h2>Users</h2>
-        <form onSubmit={handleUserSubmit}>
-          <label>
-            Name
-            <input
-              value={userForm.name}
-              onChange={(event) => setUserForm((prev) => ({ ...prev, name: event.target.value }))}
-              placeholder="Jane Doe"
-              required
-            />
-          </label>
-          <label>
-            Email
-            <input
-              type="email"
-              value={userForm.email}
-              onChange={(event) => setUserForm((prev) => ({ ...prev, email: event.target.value }))}
-              placeholder="jane@example.com"
-              required
-            />
-          </label>
-          <button type="submit">Add user</button>
-        </form>
-
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Email</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.length === 0 ? (
+      <section className="panels">
+        <article>
+          <h2>Users</h2>
+          <p>List and create users via the backend API.</p>
+          <form onSubmit={handleUserSubmit}>
+            <label>
+              Name
+              <input
+                value={userForm.name}
+                onChange={(event) => setUserForm((prev) => ({ ...prev, name: event.target.value }))}
+                required
+              />
+            </label>
+            <label>
+              Email
+              <input
+                type="email"
+                value={userForm.email}
+                onChange={(event) => setUserForm((prev) => ({ ...prev, email: event.target.value }))}
+                required
+              />
+            </label>
+            <button type="submit">Add user</button>
+          </form>
+          <table>
+            <thead>
               <tr>
-                <td colSpan={3}>No users yet.</td>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
               </tr>
-            ) : (
-              users.map((user) => (
-                <tr key={user.id}>
-                  <td>{user.id}</td>
-                  <td>{user.name}</td>
-                  <td>{user.email}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </section>
+            </thead>
+            <tbody>
+              {users.length === 0 ? (
+                <tr><td colSpan={3}>No users found.</td></tr>
+              ) : (
+                users.map((user) => (
+                  <tr key={user.id}>
+                    <td>{user.id}</td>
+                    <td>{user.name}</td>
+                    <td>{user.email}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </article>
 
-      <section>
-        <h2>Accounts</h2>
-        <form onSubmit={handleAccountSubmit}>
-          <label>
-            Label
-            <input
-              value={accountForm.label}
-              onChange={(event) => setAccountForm({ label: event.target.value })}
-              placeholder="Primary Inbox"
-              required
-            />
-          </label>
-          <button type="submit">Create account</button>
-        </form>
-
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Label</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {accounts.length === 0 ? (
+        <article>
+          <h2>Accounts</h2>
+          <p>Keep track of warmup accounts.</p>
+          <form onSubmit={handleAccountSubmit}>
+            <label>
+              Label
+              <input
+                value={accountForm.label}
+                onChange={(event) => setAccountForm({ label: event.target.value })}
+                required
+              />
+            </label>
+            <button type="submit">Create account</button>
+          </form>
+          <table>
+            <thead>
               <tr>
-                <td colSpan={3}>No accounts yet.</td>
+                <th>ID</th>
+                <th>Label</th>
+                <th>Status</th>
               </tr>
-            ) : (
-              accounts.map((account) => (
-                <tr key={account.id}>
-                  <td>{account.id}</td>
-                  <td>{account.label}</td>
-                  <td>
-                    <span className="status-tag">{account.status}</span>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </section>
+            </thead>
+            <tbody>
+              {accounts.length === 0 ? (
+                <tr><td colSpan={3}>No accounts found.</td></tr>
+              ) : (
+                accounts.map((account) => (
+                  <tr key={account.id}>
+                    <td>{account.id}</td>
+                    <td>{account.label}</td>
+                    <td>{account.status}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </article>
 
-      <section>
-        <h2>Warming Tasks</h2>
-        <form onSubmit={handleTaskSubmit}>
-          <label>
-            Account
-            <select
-              value={taskForm.accountId}
-              onChange={(event) => setTaskForm((prev) => ({ ...prev, accountId: event.target.value }))}
-              required
-            >
-              <option value="" disabled>
-                Select account
-              </option>
-              {accountOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            Task type
-            <select
-              value={taskForm.kind}
-              onChange={(event) => setTaskForm((prev) => ({ ...prev, kind: event.target.value }))}
-            >
-              <option value="email">Email</option>
-              <option value="social">Social</option>
-              <option value="custom">Custom</option>
-            </select>
-          </label>
-
-          <button type="submit">Create task</button>
-        </form>
-
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Account</th>
-              <th>Kind</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tasks.length === 0 ? (
+        <article>
+          <h2>Warming tasks</h2>
+          <p>Assign tasks to the accounts above.</p>
+          <form onSubmit={handleTaskSubmit}>
+            <label>
+              Account
+              <select
+                value={taskForm.accountId}
+                onChange={(event) => setTaskForm((prev) => ({ ...prev, accountId: event.target.value }))}
+                required
+              >
+                <option value="">Select account</option>
+                {accounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.label} (#{account.id})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Kind
+              <select
+                value={taskForm.kind}
+                onChange={(event) => setTaskForm((prev) => ({ ...prev, kind: event.target.value }))}
+              >
+                <option value="email">email</option>
+                <option value="social">social</option>
+              </select>
+            </label>
+            <button type="submit">Create task</button>
+          </form>
+          <table>
+            <thead>
               <tr>
-                <td colSpan={4}>No tasks yet.</td>
+                <th>ID</th>
+                <th>Account</th>
+                <th>Kind</th>
+                <th>State</th>
               </tr>
-            ) : (
-              tasks.map((task) => (
-                <tr key={task.id}>
-                  <td>{task.id}</td>
-                  <td>{task.account_id}</td>
-                  <td>{task.kind}</td>
-                  <td>{task.state}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {tasks.length === 0 ? (
+                <tr><td colSpan={4}>No tasks found.</td></tr>
+              ) : (
+                tasks.map((task) => (
+                  <tr key={task.id}>
+                    <td>{task.id}</td>
+                    <td>{task.account_id}</td>
+                    <td>{task.kind}</td>
+                    <td>{task.state}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </article>
       </section>
     </main>
   );

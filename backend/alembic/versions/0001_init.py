@@ -1,15 +1,14 @@
-"""initial tables
+"""Initial schema for Warmup SaaS.
 
 Revision ID: 0001_init
-Revises: 
-Create Date: 2025-10-27 15:16:00.000000
+Revises:
+Create Date: 2024-01-01 00:00:00.000000
 """
 
 from alembic import op
 import sqlalchemy as sa
 
 
-# revision identifiers, used by Alembic.
 revision = "0001_init"
 down_revision = None
 branch_labels = None
@@ -21,10 +20,8 @@ def upgrade() -> None:
         "users",
         sa.Column("id", sa.Integer(), primary_key=True, nullable=False),
         sa.Column("name", sa.String(length=120), nullable=False),
-        sa.Column("email", sa.String(length=255), nullable=False),
+        sa.Column("email", sa.String(length=255), nullable=False, unique=True),
     )
-    op.create_index("ix_users_id", "users", ["id"], unique=False)
-    op.create_index("ix_users_email", "users", ["email"], unique=True)
 
     op.create_table(
         "accounts",
@@ -40,13 +37,11 @@ def upgrade() -> None:
         sa.Column("kind", sa.String(length=32), server_default=sa.text("'email'"), nullable=False),
         sa.Column("state", sa.String(length=32), server_default=sa.text("'queued'"), nullable=False),
     )
-    op.create_index("ix_warming_tasks_account_id", "warming_tasks", ["account_id"], unique=False)
+    op.create_index("ix_warming_tasks_account_id", "warming_tasks", ["account_id"])
 
 
 def downgrade() -> None:
     op.drop_index("ix_warming_tasks_account_id", table_name="warming_tasks")
     op.drop_table("warming_tasks")
     op.drop_table("accounts")
-    op.drop_index("ix_users_email", table_name="users")
-    op.drop_index("ix_users_id", table_name="users")
     op.drop_table("users")
