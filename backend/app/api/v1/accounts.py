@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from ...database import get_db
-from ...models.account import Account
-from ...schemas.account import AccountCreate, AccountRead
 
+from ...database import get_db
+from ...models import Account
+from ...schemas.account import AccountCreate, AccountRead
 
 router = APIRouter(prefix="/accounts", tags=["accounts"])
 

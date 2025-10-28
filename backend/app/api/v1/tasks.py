@@ -3,10 +3,9 @@ from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 
 from ...database import get_db
-from ...models.warming_task import WarmingTask
+from ...models import WarmingTask
 from ...schemas.warming_task import WarmingTaskCreate, WarmingTaskRead
 from ...worker import queue, warming_job
-
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
