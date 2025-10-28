@@ -1,91 +1,80 @@
-# ✅ Codex-correct version
-from pathlib import Path
-from typing import List
-
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse
-from pydantic import BaseModel, EmailStr, ConfigDict
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 
-from .config import settings
-from .database import Base, engine, get_db
-from .models import User
+from app.config import settings
+from app.database import Base, SessionLocal, engine
+from app.models import Plan
+from app.routes import analytics, auth, subscriptions, users
 
-# ---- Pydantic Schemas (v2) ----
-class UserCreate(BaseModel):
-    name: str
-    email: EmailStr
-
-class UserRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    id: int
-    name: str
-    email: EmailStr
-
-# ---- App ----
-app = FastAPI(title=settings.APP_NAME)
-
-# CORS (allow Vite dev server)
-origins = ["http://localhost:5173"]
+app = FastAPI(title="Warmup SaaS", openapi_url="/openapi.json")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Create tables on startup if not exist
-Base.metadata.create_all(bind=engine)
 
-# Mount static files
-static_dir = Path(__file__).parent / "static"
-static_dir.mkdir(parents=True, exist_ok=True)
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
+@app.on_event("startup")
+def on_startup() -> None:
+    Base.metadata.create_all(bind=engine)
+    with SessionLocal() as db:
+        if not db.query(Plan).first():
+            plans = [
+                {
+                    "slug": "free",
+                    "name": "Free",
+                    "price_monthly": 0,
+                    "limits_json": {
+                        "max_users": 1,
+                        "max_actions": 100,
+                        "max_api_calls": 1000,
+                    },
+                },
+                {
+                    "slug": "starter",
+                    "name": "Starter",
+                    "price_monthly": 9,
+                    "limits_json": {
+                        "max_users": 3,
+                        "max_actions": 1000,
+                        "max_api_calls": 10000,
+                    },
+                },
+                {
+                    "slug": "professional",
+                    "name": "Professional",
+                    "price_monthly": 29,
+                    "limits_json": {
+                        "max_users": 10,
+                        "max_actions": 5000,
+                        "max_api_calls": 50000,
+                    },
+                },
+                {
+                    "slug": "enterprise",
+                    "name": "Enterprise",
+                    "price_monthly": 99,
+                    "limits_json": {
+                        "max_users": 100,
+                        "max_actions": 50000,
+                        "max_api_calls": 500000,
+                    },
+                },
+            ]
+            for plan in plans:
+                db.add(Plan(**plan))
+            db.commit()
 
-@app.get("/", include_in_schema=False)
-def root():
-    return {"app": settings.APP_NAME, "ok": True}
 
-@app.get("/ui", include_in_schema=False)
-def serve_ui():
-    return RedirectResponse(url="/static/index.html")
-
-# ---- Users Endpoints ----
-@app.get("/api/health", include_in_schema=False)
-def api_health():
-    return {"status": "ok", "app": settings.APP_NAME}
+app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(subscriptions.router)
+app.include_router(analytics.router)
 
 
-@app.get("/api/users", response_model=List[UserRead])
-def list_users(db: Session = Depends(get_db)):
-    users = db.query(User).order_by(User.id.desc()).all()
-    return users
-
-@app.post("/api/users", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-def create_user(payload: UserCreate, db: Session = Depends(get_db)):
-    u = User(name=payload.name, email=str(payload.email))
-    db.add(u)
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email already exists"
-        )
-    db.refresh(u)
-    return u
-
-@app.delete("/api/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(user_id: int, db: Session = Depends(get_db)):
-    u = db.query(User).filter(User.id == user_id).first()
-    if not u:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    db.delete(u)
-    db.commit()
-    return
+@app.get("/api/health")
+def health() -> dict[str, bool]:
+    return {"ok": True}
