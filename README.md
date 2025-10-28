@@ -20,6 +20,26 @@ docker compose -f ops/docker-compose.yml up -d backend worker
 docker compose -f ops/docker-compose.yml up -d caddy
 ```
 
+## Run backend manually (without Docker)
+
+To run the FastAPI backend directly on your machine:
+
+1. Open a terminal (CMD/PowerShell) in the `backend` directory.
+2. Create and activate the virtual environment:
+   ```bash
+   python -m venv venv
+   # Windows
+   venv\Scripts\activate
+   # macOS / Linux
+   source venv/bin/activate
+   ```
+3. Install dependencies and start the development server:
+   ```bash
+   pip install -r requirements.txt
+   uvicorn app.main:app --reload
+   ```
+4. Visit <http://127.0.0.1:8000/static/index.html> in your browser to use the built-in UI.
+
 ## Key endpoints
 
 - `GET /api/v1/users`
