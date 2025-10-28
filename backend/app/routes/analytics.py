@@ -3,11 +3,12 @@ from sqlalchemy.orm import Session
 
 from app.deps import get_current_user, get_db
 from app.models import UsageLog, User
+from app.schemas import AnalyticsSummary
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
 
-@router.get("/summary")
+@router.get("/summary", response_model=AnalyticsSummary)
 def summary(db: Session = Depends(get_db), current=Depends(get_current_user)):
     total_users = db.query(User).count()
     total_calls = db.query(UsageLog).count()

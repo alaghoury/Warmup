@@ -1,28 +1,10 @@
 from typing import Any
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel
 
 
-class UserBase(BaseModel):
-    email: EmailStr
-    name: str
-
-
-class UserCreate(UserBase):
-    password: str = Field(min_length=6)
-
-
-class UserOut(UserBase):
-    id: int
-    is_active: bool
-
-    class Config:
-        from_attributes = True
-
-
-class TokenOut(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+class SubscriptionCreate(BaseModel):
+    plan_slug: str
 
 
 class PlanOut(BaseModel):

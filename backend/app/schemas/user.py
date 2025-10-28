@@ -1,14 +1,18 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class UserBase(BaseModel):
-    name: str
     email: EmailStr
+    name: str
 
 
 class UserCreate(UserBase):
-    pass
+    password: str = Field(min_length=6)
 
 
-class UserRead(UserBase):
+class UserOut(UserBase):
     id: int
+    is_active: bool
+
+    class Config:
+        from_attributes = True
