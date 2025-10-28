@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import axios from "axios";
 import UserForm from "./components/UserForm.jsx";
 import UserList from "./components/UserList.jsx";
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000",
-});
+import api from "./api.js";
 
 function App() {
   const [users, setUsers] = useState([]);
@@ -19,7 +15,7 @@ function App() {
       const { data } = await api.get("/users");
       setUsers(data);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to fetch users", err);
       setError("Failed to load users");
     } finally {
       setLoading(false);
@@ -37,6 +33,7 @@ function App() {
       fetchUsers();
       return true;
     } catch (err) {
+      console.error("Failed to add user", err);
       if (err.response?.status === 409) {
         setError("Email already exists");
       } else {
@@ -52,7 +49,7 @@ function App() {
       await api.delete(`/users/${id}`);
       setUsers((prev) => prev.filter((user) => user.id !== id));
     } catch (err) {
-      console.error(err);
+      console.error(`Failed to delete user with id ${id}`, err);
       setError("Failed to delete user");
     }
   };
