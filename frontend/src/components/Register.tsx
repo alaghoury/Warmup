@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { isAxiosError } from "axios";
 import { login, register } from "../lib/auth";
 
 interface RegisterProps {
@@ -23,7 +24,22 @@ const Register: React.FC<RegisterProps> = ({ onSuccess, onSwitchToLogin }) => {
       onSuccess();
     } catch (err) {
       console.error("Registration failed", err);
-      setError("Unable to register with those details.");
+      if (isAxiosError(err) && err.response) {
+        const status = err.response.status;
+        const detail =
+          typeof err.response.data === "string"
+            ? err.response.data
+            : err.response.data?.detail;
+        if (status === 409) {
+          setError(detail ?? "Email already registered.");
+        } else if (status === 400) {
+          setError(detail ?? "Invalid registration details.");
+        } else {
+          setError(detail ?? "Unexpected error while registering.");
+        }
+      } else {
+        setError("Unable to register with those details.");
+      }
     } finally {
       setLoading(false);
     }
