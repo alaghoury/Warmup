@@ -62,6 +62,10 @@ export default function AdminPanel({ onNotify }: AdminPanelProps) {
 
   return (
     <div className="space-y-6">
+      <p className="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-700 shadow">
+        Manage every account in your workspace. The initial superuser defined in your environment variables is always kept
+        active and promoted to admin on startup.
+      </p>
       <section className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-xl bg-white p-4 shadow">
           <p className="text-xs uppercase tracking-wide text-slate-500">Total users</p>

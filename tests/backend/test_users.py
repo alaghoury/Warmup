@@ -66,3 +66,35 @@ def test_admin_stats_reflect_user_activity(client):
     assert after_deactivate.status_code == status.HTTP_200_OK
     after_deactivate_body = after_deactivate.json()
     assert after_deactivate_body["active_users"] == after_create_body["active_users"] - 1
+
+
+def test_admin_seed_is_idempotent(client):
+    from app.config import settings
+    from app.core.security import get_password_hash, verify_password
+    from app.main import on_startup
+    from app.models import User
+    from tests.backend.conftest import TestingSessionLocal
+
+    session = TestingSessionLocal()
+    admin = session.query(User).filter(User.email == settings.ADMIN_EMAIL).first()
+    admin.is_admin = False
+    admin.is_active = False
+    admin.name = "Old Name"
+    admin.hashed_password = get_password_hash("temp-pass")
+    session.commit()
+    session.close()
+
+    on_startup()
+
+    verify_session = TestingSessionLocal()
+    refreshed = (
+        verify_session.query(User)
+        .filter(User.email == settings.ADMIN_EMAIL)
+        .first()
+    )
+    assert refreshed is not None
+    assert refreshed.is_admin is True
+    assert refreshed.is_active is True
+    assert refreshed.name == settings.ADMIN_NAME
+    assert verify_password(settings.ADMIN_PASSWORD, refreshed.hashed_password)
+    verify_session.close()

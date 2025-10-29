@@ -9,6 +9,7 @@ def test_register_user_returns_token_and_profile(client):
     assert response.status_code == status.HTTP_201_CREATED
     body = response.json()
     assert body["token_type"] == "bearer"
+    assert body["expires_in"] > 0
     assert body["user"]["email"] == "test@example.com"
     assert body["user"]["is_active"] is True
 
@@ -37,3 +38,4 @@ def test_login_returns_user_payload(client):
     body = response.json()
     assert body["user"]["email"] == "login@example.com"
     assert body["access_token"]
+    assert body["expires_in"] > 0

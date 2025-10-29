@@ -22,6 +22,21 @@ uvicorn app.main:app --reload
 
 The API is served at <http://127.0.0.1:8000>. Interactive docs live at <http://127.0.0.1:8000/docs>.
 
+### Database migrations
+
+Alembic migrations run automatically on startup, but you can also trigger them manually:
+
+```bash
+cd backend
+python -m app.cli upgrade
+```
+
+To generate a new revision based on model changes:
+
+```bash
+python -m app.cli revision "describe the change"
+```
+
 ## Frontend setup
 
 ```bash
@@ -64,6 +79,9 @@ On startup the backend ensures an admin user exists:
 
 - Email: `mohammedalaghoury@gmail.com`
 - Password: `Moh2611`
+
+The startup job is idempotent—it also re-promotes the account to admin, reactivates it, and resets the password if you change
+those values in the database or environment configuration.
 
 Use these credentials to log in and access the admin panel tab in the dashboard.
 

@@ -3,7 +3,12 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.security import create_access_token, get_password_hash, verify_password
+from app.core.security import (
+    create_access_token,
+    get_access_token_expires_in,
+    get_password_hash,
+    verify_password,
+)
 from app.deps import get_current_user, get_db
 from app.models import User
 from app.schemas import AuthResponse, UserCreate, UserOut
@@ -28,7 +33,11 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered") from exc
     db.refresh(user)
     token = create_access_token(user.email)
-    return AuthResponse(access_token=token, user=UserOut.model_validate(user))
+    return AuthResponse(
+        access_token=token,
+        expires_in=get_access_token_expires_in(),
+        user=UserOut.model_validate(user),
+    )
 
 
 @router.post("/login", response_model=AuthResponse)
@@ -42,7 +51,11 @@ def login(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect email or password"
         )
     token = create_access_token(user.email)
-    return AuthResponse(access_token=token, user=UserOut.model_validate(user))
+    return AuthResponse(
+        access_token=token,
+        expires_in=get_access_token_expires_in(),
+        user=UserOut.model_validate(user),
+    )
 
 
 @router.get("/me", response_model=UserOut)
