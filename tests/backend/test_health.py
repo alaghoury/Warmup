@@ -1,2 +1,7 @@
-def test_placeholder():
-    assert 1 == 1
+from fastapi import status
+
+
+def test_health_endpoint(client):
+    response = client.get("/api/health")
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {"ok": True}

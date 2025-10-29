@@ -1,36 +1,37 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
-from app.deps import get_db
+from app.core.security import create_access_token, get_password_hash, verify_password
+from app.deps import get_current_user, get_db
 from app.models import User
-from app.schemas import TokenOut, UserCreate
-from app.utils import create_token, hash_password, verify_password
+from app.schemas import AuthResponse, UserCreate, UserOut
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=TokenOut, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
 def register(payload: UserCreate, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == payload.email).first():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
     user = User(
         email=payload.email,
         name=payload.name,
-        hashed_password=hash_password(payload.password),
+        hashed_password=get_password_hash(payload.password),
     )
     db.add(user)
     try:
         db.commit()
-    except IntegrityError:
+    except IntegrityError as exc:  # pragma: no cover - handled via detail below
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered") from exc
     db.refresh(user)
-    return TokenOut(access_token=create_token(user.email))
+    token = create_access_token(user.email)
+    return AuthResponse(access_token=token, user=UserOut.model_validate(user))
 
 
-@router.post("/login", response_model=TokenOut)
+@router.post("/login", response_model=AuthResponse)
 def login(
     form: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
@@ -40,4 +41,10 @@ def login(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect email or password"
         )
-    return {"access_token": create_token(user.email)}
+    token = create_access_token(user.email)
+    return AuthResponse(access_token=token, user=UserOut.model_validate(user))
+
+
+@router.get("/me", response_model=UserOut)
+def read_me(current_user: User = Depends(get_current_user)):
+    return current_user

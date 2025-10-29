@@ -36,4 +36,14 @@ def get_current_user(
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise credentials_exception
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="User account is inactive"
+        )
     return user
+
+
+def get_admin_user(current: User = Depends(get_current_user)) -> User:
+    if not current.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    return current

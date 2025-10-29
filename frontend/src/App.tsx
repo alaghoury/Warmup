@@ -1,31 +1,41 @@
-import React, { useEffect, useState } from "react";
-import api from "./api/client";
-import Dashboard, { CurrentUser } from "./components/Dashboard";
-import Login from "./components/Login";
-import Register from "./components/Register";
-import { isAuthed, logout } from "./lib/auth";
+import { useEffect, useState } from "react";
+import Dashboard from "./pages/Dashboard";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import { getCurrentUser } from "./lib/api";
+import { getToken } from "./lib/auth";
 
 type View = "login" | "register" | "dashboard";
 
-const App: React.FC = () => {
-  const [view, setView] = useState<View>(isAuthed() ? "dashboard" : "login");
-  const [user, setUser] = useState<CurrentUser | null>(null);
-  const [loadingUser, setLoadingUser] = useState(false);
+type ToastState = {
+  message: string;
+  tone: "success" | "error";
+};
 
-  const loadCurrentUser = async () => {
-    if (!isAuthed()) {
-      setUser(null);
+export default function App() {
+  const [view, setView] = useState<View>(getToken() ? "dashboard" : "login");
+  const [currentUser, setCurrentUser] = useState<any | null>(null);
+  const [loadingUser, setLoadingUser] = useState(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
+
+  const showToast = (message: string, tone: "success" | "error" = "success") => {
+    setToast({ message, tone });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const loadUser = async () => {
+    if (!getToken()) {
+      setCurrentUser(null);
       return;
     }
     setLoadingUser(true);
     try {
-      const response = await api.get<CurrentUser>("/users/me");
-      setUser(response.data);
+      const data = await getCurrentUser();
+      setCurrentUser(data);
       setView("dashboard");
-    } catch (err) {
-      console.error("Failed to load current user", err);
-      logout();
-      setUser(null);
+    } catch (error) {
+      console.error("Failed to load current user", error);
+      setCurrentUser(null);
       setView("login");
     } finally {
       setLoadingUser(false);
@@ -33,43 +43,60 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    if (view === "dashboard" && !user && isAuthed()) {
-      loadCurrentUser();
+    if (view === "dashboard" && getToken() && !currentUser) {
+      loadUser();
     }
   }, [view]);
 
-  const handleAuthSuccess = async () => {
-    await loadCurrentUser();
+  const handleAuthenticated = (user: any) => {
+    setCurrentUser(user);
+    setView("dashboard");
   };
 
   const handleLogout = () => {
-    logout();
-    setUser(null);
+    setCurrentUser(null);
     setView("login");
+    showToast("Logged out", "success");
   };
 
-  if (view === "dashboard") {
-    if (loadingUser || !user) {
-      return <div className="loader">Loading your dashboard...</div>;
-    }
-    return <Dashboard user={user} onLogout={handleLogout} />;
-  }
-
-  if (view === "login") {
-    return (
-      <Login
-        onSuccess={handleAuthSuccess}
-        onSwitchToRegister={() => setView("register")}
-      />
-    );
-  }
-
   return (
-    <Register
-      onSuccess={handleAuthSuccess}
-      onSwitchToLogin={() => setView("login")}
-    />
+    <div className="min-h-screen bg-slate-100">
+      {toast && (
+        <div
+          className={`fixed inset-x-0 top-4 mx-auto w-fit rounded-full px-4 py-2 text-sm font-medium shadow-lg transition ${
+            toast.tone === "success" ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
+      {view === "dashboard" ? (
+        loadingUser || !currentUser ? (
+          <div className="flex min-h-screen items-center justify-center text-slate-500">
+            Loading dashboard…
+          </div>
+        ) : (
+          <Dashboard currentUser={currentUser} onLogout={handleLogout} onNotify={showToast} />
+        )
+      ) : view === "login" ? (
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-100 via-white to-slate-100 px-6 py-10">
+          <Login
+            onAuthenticated={(user) => handleAuthenticated(user)}
+            onSwitchToRegister={() => setView("register")}
+            onError={(message) => showToast(message, "error")}
+            onSuccess={(message) => showToast(message, "success")}
+          />
+        </div>
+      ) : (
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-100 via-white to-slate-100 px-6 py-10">
+          <Register
+            onAuthenticated={(user) => handleAuthenticated(user)}
+            onSwitchToLogin={() => setView("login")}
+            onError={(message) => showToast(message, "error")}
+            onSuccess={(message) => showToast(message, "success")}
+          />
+        </div>
+      )}
+    </div>
   );
-};
-
-export default App;
+}

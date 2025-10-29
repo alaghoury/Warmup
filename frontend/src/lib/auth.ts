@@ -1,20 +1,17 @@
-import { login as loginRequest, register as registerRequest, RegisterPayload } from "../api/auth";
+import { login as apiLogin, logout as apiLogout, register as apiRegister } from "./api";
 
 const TOKEN_KEY = "token";
 
 export async function login(email: string, password: string) {
-  const data = await loginRequest(email, password);
-  window.localStorage.setItem(TOKEN_KEY, data.access_token);
-  return data;
+  return apiLogin(email, password);
 }
 
-export async function register(payload: RegisterPayload) {
-  const data = await registerRequest(payload);
-  return data;
+export async function register(payload: { name: string; email: string; password: string }) {
+  return apiRegister(payload);
 }
 
 export function logout() {
-  window.localStorage.removeItem(TOKEN_KEY);
+  apiLogout();
 }
 
 export function getToken() {

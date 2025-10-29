@@ -5,9 +5,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import cli
 from app.config import settings
+from app.core.security import get_password_hash
 from app.database import SessionLocal
-from app.models import Plan
-from app.routes import analytics, auth, subscriptions, users
+from app.models import Plan, User
+from app.routes import admin, analytics, auth, subscriptions, users
 
 app = FastAPI(title="Warmup SaaS", openapi_url="/openapi.json")
 
@@ -22,11 +23,12 @@ app.add_middleware(
 
 @app.on_event("startup")
 def on_startup() -> None:
-    try:
-        cli.upgrade()
-    except Exception as exc:  # pragma: no cover - startup failure should be visible in logs
-        logging.getLogger(__name__).exception("Failed to apply database migrations: %s", exc)
-        raise
+    if settings.RUN_MIGRATIONS_ON_STARTUP:
+        try:
+            cli.upgrade()
+        except Exception as exc:  # pragma: no cover - startup failure should be visible in logs
+            logging.getLogger(__name__).exception("Failed to apply database migrations: %s", exc)
+            raise
     with SessionLocal() as db:
         if not db.query(Plan).first():
             plans = [
@@ -74,12 +76,23 @@ def on_startup() -> None:
             for plan in plans:
                 db.add(Plan(**plan))
             db.commit()
+        if not db.query(User).filter(User.email == settings.ADMIN_EMAIL).first():
+            admin_user = User(
+                name=settings.ADMIN_NAME,
+                email=settings.ADMIN_EMAIL,
+                hashed_password=get_password_hash(settings.ADMIN_PASSWORD),
+                is_admin=True,
+                is_active=True,
+            )
+            db.add(admin_user)
+            db.commit()
 
 
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(subscriptions.router)
 app.include_router(analytics.router)
+app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 
 
 @app.get("/api/health")

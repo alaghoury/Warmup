@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import api from "../api/client";
+import { useEffect, useState } from "react";
+import { checkoutPlan, getPlans, getSubscription } from "../lib/api";
 
 type Plan = {
   id: number;
@@ -15,87 +15,105 @@ type Subscription = {
   plan: Plan;
 };
 
-const Billing: React.FC = () => {
+interface BillingProps {
+  onNotify: (message: string, tone?: "success" | "error") => void;
+}
+
+export default function Billing({ onNotify }: BillingProps) {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [current, setCurrent] = useState<Subscription | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const [plansData, currentData] = await Promise.all([getPlans(), getSubscription()]);
+      setPlans(plansData);
+      setCurrent(currentData);
+    } catch (err) {
+      console.error("Failed to load billing info", err);
+      onNotify("Unable to load billing details", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchBilling = async () => {
-      try {
-        const [plansResponse, currentResponse] = await Promise.all([
-          api.get<Plan[]>("/subscriptions/plans"),
-          api.get<Subscription | null>("/subscriptions/me"),
-        ]);
-        setPlans(plansResponse.data);
-        setCurrent(currentResponse.data);
-      } catch (err) {
-        console.error("Failed to load billing info", err);
-        setError("Unable to load billing details.");
-      }
-    };
-
-    fetchBilling();
+    load();
   }, []);
 
   const choosePlan = async (slug: string) => {
     try {
-      const response = await api.post("/subscriptions/checkout", null, {
-        params: { plan_slug: slug },
-      });
-      setMessage(response.data.message ?? "Subscription updated");
-      const currentResponse = await api.get<Subscription | null>("/subscriptions/me");
-      setCurrent(currentResponse.data);
-      setError(null);
+      const response = await checkoutPlan(slug);
+      onNotify(response.message ?? "Subscription updated", "success");
+      const currentData = await getSubscription();
+      setCurrent(currentData);
     } catch (err) {
       console.error("Failed to update subscription", err);
-      setError("Unable to update subscription. Please try again later.");
+      onNotify("Unable to update subscription", "error");
     }
   };
 
   return (
-    <section>
-      <h3>Billing</h3>
-      {error && <div style={{ color: "red" }}>{error}</div>}
-      {message && <div style={{ color: "green" }}>{message}</div>}
-      <div style={{ marginBottom: 12 }}>
+    <section className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-slate-900">Billing</h3>
+          <p className="text-sm text-slate-500">Manage your subscription plan.</p>
+        </div>
+        <button
+          type="button"
+          onClick={load}
+          disabled={loading}
+          className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:border-indigo-500 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {loading ? "Refreshing…" : "Refresh"}
+        </button>
+      </div>
+      <div className="rounded-xl bg-white p-4 shadow">
         {current ? (
-          <div>
-            Current plan: <strong>{current.plan.name}</strong>
-          </div>
+          <p className="text-sm text-slate-600">
+            Current plan: <span className="font-semibold text-slate-900">{current.plan.name}</span>
+          </p>
         ) : (
-          <div>No active subscription</div>
+          <p className="text-sm text-slate-500">No active subscription yet.</p>
         )}
       </div>
-      <div
-        style={{
-          display: "grid",
-          gap: 12,
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-        }}
-      >
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {plans.map((plan) => (
-          <div
-            key={plan.id}
-            style={{ border: "1px solid #ddd", padding: 12, borderRadius: 8 }}
-          >
-            <h4 style={{ marginTop: 0 }}>{plan.name}</h4>
-            <div style={{ fontWeight: "bold" }}>${plan.price_monthly}/mo</div>
-            <pre style={{ whiteSpace: "pre-wrap" }}>
-              {JSON.stringify(plan.limits_json, null, 2)}
-            </pre>
-            <button
-              onClick={() => choosePlan(plan.slug)}
-              disabled={current?.plan?.id === plan.id}
-            >
-              {current?.plan?.id === plan.id ? "Selected" : "Select"}
-            </button>
+          <div key={plan.id} className="flex h-full flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h4 className="text-lg font-semibold text-slate-900">{plan.name}</h4>
+                <p className="mt-1 text-sm text-slate-500">${plan.price_monthly}/mo</p>
+              </div>
+              <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold uppercase text-indigo-600">
+                {plan.slug}
+              </span>
+            </div>
+            <ul className="mt-4 space-y-2 text-sm text-slate-600">
+              {Object.entries(plan.limits_json ?? {}).map(([key, value]) => (
+                <li key={key} className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
+                  <span>
+                    {key.replace(/_/g, " ")} — <strong>{value}</strong>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={() => choosePlan(plan.slug)}
+                disabled={current?.plan?.id === plan.id}
+                className="w-full rounded-lg bg-indigo-600 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-300"
+              >
+                {current?.plan?.id === plan.id ? "Selected" : "Select"}
+              </button>
+            </div>
           </div>
         ))}
       </div>
     </section>
   );
-};
-
-export default Billing;
+}

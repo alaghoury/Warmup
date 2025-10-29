@@ -1,44 +1,46 @@
-import React, { useEffect, useState } from "react";
-import api from "../api/client";
+import { useEffect, useState } from "react";
+import { getAnalyticsSummary } from "../lib/api";
 
 interface AnalyticsSummary {
   total_users: number;
   total_api_calls: number;
 }
 
-const AnalyticsChart: React.FC = () => {
+export default function AnalyticsChart() {
   const [data, setData] = useState<AnalyticsSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchSummary = async () => {
+    const load = async () => {
       try {
-        const response = await api.get<AnalyticsSummary>("/analytics/summary");
-        setData(response.data);
+        const summary = await getAnalyticsSummary();
+        setData(summary);
       } catch (err) {
         console.error("Failed to load analytics", err);
         setError("Unable to load analytics summary.");
       }
     };
-
-    fetchSummary();
+    load();
   }, []);
 
   if (error) {
-    return <div style={{ color: "red" }}>{error}</div>;
+    return <div className="rounded-lg bg-rose-100 px-3 py-2 text-sm text-rose-700">{error}</div>;
   }
 
   if (!data) {
-    return <div>Loading analytics...</div>;
+    return <div className="text-sm text-slate-500">Loading analytics…</div>;
   }
 
   return (
-    <section>
-      <h3>Analytics</h3>
-      <p>Total users: {data.total_users}</p>
-      <p>Total API calls: {data.total_api_calls}</p>
+    <section className="grid gap-4 sm:grid-cols-2">
+      <div className="rounded-xl bg-white p-5 shadow">
+        <p className="text-xs uppercase tracking-wide text-slate-500">Total users</p>
+        <p className="mt-2 text-3xl font-semibold text-slate-900">{data.total_users}</p>
+      </div>
+      <div className="rounded-xl bg-white p-5 shadow">
+        <p className="text-xs uppercase tracking-wide text-slate-500">Total API calls</p>
+        <p className="mt-2 text-3xl font-semibold text-slate-900">{data.total_api_calls}</p>
+      </div>
     </section>
   );
-};
-
-export default AnalyticsChart;
+}

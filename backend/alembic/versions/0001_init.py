@@ -22,7 +22,8 @@ def upgrade() -> None:
         sa.Column("email", sa.String(length=255), nullable=False),
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("hashed_password", sa.String(length=255), nullable=False),
-        sa.Column("is_active", sa.Boolean(), nullable=False, default=True),
+        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("1")),
+        sa.Column("is_admin", sa.Boolean(), nullable=False, server_default=sa.text("0")),
         sa.Column(
             "created_at",
             sa.DateTime(),
@@ -40,8 +41,8 @@ def upgrade() -> None:
         sa.Column("slug", sa.String(length=255), nullable=False),
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("price_monthly", sa.Float(), nullable=False),
-        sa.Column("limits_json", sa.JSON(), nullable=False),
-        sa.Column("is_active", sa.Boolean(), nullable=False, default=True),
+        sa.Column("limits_json", sa.JSON(), nullable=False, server_default=sa.text("'{}'")),
+        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("1")),
         sa.UniqueConstraint("slug", name="uq_plans_slug"),
     )
     op.create_index("ix_plans_slug", "plans", ["slug"], unique=False)
