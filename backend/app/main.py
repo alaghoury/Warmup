@@ -1,8 +1,11 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app import cli
 from app.config import settings
-from app.database import Base, SessionLocal, engine
+from app.database import SessionLocal
 from app.models import Plan
 from app.routes import analytics, auth, subscriptions, users
 
@@ -19,7 +22,11 @@ app.add_middleware(
 
 @app.on_event("startup")
 def on_startup() -> None:
-    Base.metadata.create_all(bind=engine)
+    try:
+        cli.upgrade()
+    except Exception as exc:  # pragma: no cover - startup failure should be visible in logs
+        logging.getLogger(__name__).exception("Failed to apply database migrations: %s", exc)
+        raise
     with SessionLocal() as db:
         if not db.query(Plan).first():
             plans = [

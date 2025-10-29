@@ -5,13 +5,13 @@ from sqlalchemy.exc import IntegrityError
 
 from app.deps import get_db
 from app.models import User
-from app.schemas import TokenOut, UserCreate, UserOut
+from app.schemas import TokenOut, UserCreate
 from app.utils import create_token, hash_password, verify_password
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=TokenOut, status_code=status.HTTP_201_CREATED)
 def register(payload: UserCreate, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == payload.email).first():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
@@ -27,7 +27,7 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
     db.refresh(user)
-    return user
+    return TokenOut(access_token=create_token(user.email))
 
 
 @router.post("/login", response_model=TokenOut)

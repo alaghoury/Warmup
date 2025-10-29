@@ -11,6 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from app.config import settings  # noqa: E402
 from app.database import Base  # noqa: E402
+from app import models  # noqa: F401,E402  # ensure models are imported for metadata
 
 config = context.config
 if config.config_file_name is not None:

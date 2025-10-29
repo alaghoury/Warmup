@@ -12,6 +12,7 @@ build/
 .DS_Store
 *.sqlite*
 app.db
+warmup.db
 venv/
 .venv/
 .mypy_cache/

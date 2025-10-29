@@ -21,7 +21,7 @@ export interface RegisterPayload {
   password: string;
 }
 
-export async function register(payload: RegisterPayload) {
-  const response = await api.post("/auth/register", payload);
+export async function register(payload: RegisterPayload): Promise<AuthResponse> {
+  const response = await api.post<AuthResponse>("/auth/register", payload);
   return response.data;
 }

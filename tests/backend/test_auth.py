@@ -8,9 +8,8 @@ def test_register_user(client):
     )
     assert response.status_code == status.HTTP_201_CREATED
     body = response.json()
-    assert body["email"] == "test@example.com"
-    assert body["name"] == "Test"
-    assert body["is_active"] is True
+    assert "access_token" in body and body["access_token"]
+    assert body["token_type"] == "bearer"
 
 
 def test_register_duplicate_email_returns_conflict(client):

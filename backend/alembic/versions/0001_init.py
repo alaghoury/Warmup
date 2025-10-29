@@ -19,29 +19,77 @@ def upgrade() -> None:
     op.create_table(
         "users",
         sa.Column("id", sa.Integer(), primary_key=True, nullable=False),
-        sa.Column("name", sa.String(length=120), nullable=False),
-        sa.Column("email", sa.String(length=255), nullable=False, unique=True),
+        sa.Column("email", sa.String(length=255), nullable=False),
+        sa.Column("name", sa.String(length=255), nullable=False),
+        sa.Column("hashed_password", sa.String(length=255), nullable=False),
+        sa.Column("is_active", sa.Boolean(), nullable=False, default=True),
+        sa.Column(
+            "created_at",
+            sa.DateTime(),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
+        sa.UniqueConstraint("email", name="uq_users_email"),
     )
+    op.create_index("ix_users_email", "users", ["email"], unique=False)
+    op.create_index("ix_users_id", "users", ["id"], unique=False)
 
     op.create_table(
-        "accounts",
+        "plans",
         sa.Column("id", sa.Integer(), primary_key=True, nullable=False),
-        sa.Column("label", sa.String(length=120), nullable=False),
-        sa.Column("status", sa.String(length=32), server_default=sa.text("'active'"), nullable=False),
+        sa.Column("slug", sa.String(length=255), nullable=False),
+        sa.Column("name", sa.String(length=255), nullable=False),
+        sa.Column("price_monthly", sa.Float(), nullable=False),
+        sa.Column("limits_json", sa.JSON(), nullable=False),
+        sa.Column("is_active", sa.Boolean(), nullable=False, default=True),
+        sa.UniqueConstraint("slug", name="uq_plans_slug"),
     )
+    op.create_index("ix_plans_slug", "plans", ["slug"], unique=False)
 
     op.create_table(
-        "warming_tasks",
+        "subscriptions",
         sa.Column("id", sa.Integer(), primary_key=True, nullable=False),
-        sa.Column("account_id", sa.Integer(), nullable=False),
-        sa.Column("kind", sa.String(length=32), server_default=sa.text("'email'"), nullable=False),
-        sa.Column("state", sa.String(length=32), server_default=sa.text("'queued'"), nullable=False),
+        sa.Column("user_id", sa.Integer(), nullable=False),
+        sa.Column("plan_id", sa.Integer(), nullable=False),
+        sa.Column("status", sa.String(length=255), nullable=False),
+        sa.Column(
+            "started_at",
+            sa.DateTime(),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
+        sa.Column("canceled_at", sa.DateTime(), nullable=True),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["plan_id"], ["plans.id"], ondelete="CASCADE"),
     )
-    op.create_index("ix_warming_tasks_account_id", "warming_tasks", ["account_id"])
+    op.create_index("ix_subscriptions_user_id", "subscriptions", ["user_id"], unique=False)
+    op.create_index("ix_subscriptions_plan_id", "subscriptions", ["plan_id"], unique=False)
+
+    op.create_table(
+        "usage_logs",
+        sa.Column("id", sa.Integer(), primary_key=True, nullable=False),
+        sa.Column("user_id", sa.Integer(), nullable=False),
+        sa.Column("kind", sa.String(length=255), nullable=False),
+        sa.Column("amount", sa.Integer(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
+    )
+    op.create_index("ix_usage_logs_user_id", "usage_logs", ["user_id"], unique=False)
 
 
 def downgrade() -> None:
-    op.drop_index("ix_warming_tasks_account_id", table_name="warming_tasks")
-    op.drop_table("warming_tasks")
-    op.drop_table("accounts")
+    op.drop_index("ix_usage_logs_user_id", table_name="usage_logs")
+    op.drop_table("usage_logs")
+    op.drop_index("ix_subscriptions_plan_id", table_name="subscriptions")
+    op.drop_index("ix_subscriptions_user_id", table_name="subscriptions")
+    op.drop_table("subscriptions")
+    op.drop_index("ix_plans_slug", table_name="plans")
+    op.drop_table("plans")
+    op.drop_index("ix_users_id", table_name="users")
+    op.drop_index("ix_users_email", table_name="users")
     op.drop_table("users")
