@@ -4,7 +4,7 @@ import Billing from "../components/Billing";
 import UsageCard from "../components/UsageCard";
 import UsersTable from "../components/UsersTable";
 import AdminPanel from "../components/AdminPanel";
-import { logout } from "../lib/api";
+import { logout } from "../lib/auth";
 
 interface DashboardProps {
   currentUser: any;

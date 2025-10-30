@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.deps import get_admin_user, get_db
+from app.deps import get_current_admin, get_db
 from app.models import User
 from app.schemas import AdminStats, UserOut
 
@@ -17,7 +17,7 @@ router = APIRouter(tags=["admin"])
 @router.get("/users", response_model=list[UserOut])
 def list_users(
     db: Session = Depends(get_db),
-    _: User = Depends(get_admin_user),
+    _: User = Depends(get_current_admin),
 ) -> list[User]:
     return db.query(User).order_by(User.created_at.desc()).all()
 
@@ -26,7 +26,7 @@ def list_users(
 def deactivate_user(
     user_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_admin_user),
+    _: User = Depends(get_current_admin),
 ) -> dict[str, bool]:
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -40,7 +40,7 @@ def deactivate_user(
 def activate_user(
     user_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_admin_user),
+    _: User = Depends(get_current_admin),
 ) -> dict[str, bool]:
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -53,7 +53,7 @@ def activate_user(
 @router.get("/stats", response_model=AdminStats)
 def stats(
     db: Session = Depends(get_db),
-    _: User = Depends(get_admin_user),
+    _: User = Depends(get_current_admin),
 ) -> dict[str, int]:
     total_users = db.query(func.count(User.id)).scalar() or 0
     active_users = db.query(func.count(User.id)).filter(User.is_active.is_(True)).scalar() or 0

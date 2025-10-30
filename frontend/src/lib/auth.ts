@@ -1,6 +1,9 @@
-import { login as apiLogin, logout as apiLogout, register as apiRegister } from "./api";
-
-const TOKEN_KEY = "token";
+import {
+  login as apiLogin,
+  logout as apiLogout,
+  register as apiRegister,
+  getStoredToken,
+} from "./api";
 
 export async function login(email: string, password: string) {
   return apiLogin(email, password);
@@ -15,9 +18,9 @@ export function logout() {
 }
 
 export function getToken() {
-  return window.localStorage.getItem(TOKEN_KEY);
+  return getStoredToken();
 }
 
 export function isAuthed() {
-  return Boolean(getToken());
+  return Boolean(getStoredToken());
 }

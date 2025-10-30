@@ -76,34 +76,35 @@ def on_startup() -> None:
             for plan in plans:
                 db.add(Plan(**plan))
             db.commit()
-        admin = db.query(User).filter(User.email == settings.ADMIN_EMAIL).first()
-        if not admin:
-            admin = User(
-                name=settings.ADMIN_NAME,
-                email=settings.ADMIN_EMAIL,
-                hashed_password=get_password_hash(settings.ADMIN_PASSWORD),
-                is_admin=True,
-                is_active=True,
-            )
-            db.add(admin)
-            db.commit()
-        else:
-            updated = False
-            if admin.name != settings.ADMIN_NAME:
-                admin.name = settings.ADMIN_NAME
-                updated = True
-            if not admin.is_admin:
-                admin.is_admin = True
-                updated = True
-            if not admin.is_active:
-                admin.is_active = True
-                updated = True
-            if not verify_password(settings.ADMIN_PASSWORD, admin.hashed_password):
-                admin.hashed_password = get_password_hash(settings.ADMIN_PASSWORD)
-                updated = True
-            if updated:
+        if settings.SEED_SUPERUSER:
+            admin = db.query(User).filter(User.email == settings.ADMIN_EMAIL).first()
+            if not admin:
+                admin = User(
+                    name=settings.ADMIN_NAME,
+                    email=settings.ADMIN_EMAIL,
+                    hashed_password=get_password_hash(settings.ADMIN_PASSWORD),
+                    is_admin=True,
+                    is_active=True,
+                )
                 db.add(admin)
                 db.commit()
+            else:
+                updated = False
+                if admin.name != settings.ADMIN_NAME:
+                    admin.name = settings.ADMIN_NAME
+                    updated = True
+                if not admin.is_admin:
+                    admin.is_admin = True
+                    updated = True
+                if not admin.is_active:
+                    admin.is_active = True
+                    updated = True
+                if not verify_password(settings.ADMIN_PASSWORD, admin.hashed_password):
+                    admin.hashed_password = get_password_hash(settings.ADMIN_PASSWORD)
+                    updated = True
+                if updated:
+                    db.add(admin)
+                    db.commit()
 
 
 app.include_router(auth.router)

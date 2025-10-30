@@ -27,7 +27,7 @@ def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALG])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALG])
         email: str | None = payload.get("sub")
         if email is None:
             raise credentials_exception
@@ -43,7 +43,11 @@ def get_current_user(
     return user
 
 
-def get_admin_user(current: User = Depends(get_current_user)) -> User:
+def get_current_admin(current: User = Depends(get_current_user)) -> User:
     if not current.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
     return current
+
+
+# Backwards compatibility for previous imports
+get_admin_user = get_current_admin

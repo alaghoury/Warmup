@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { register } from "../lib/api";
+import { register } from "../lib/auth";
 
 interface RegisterProps {
   onAuthenticated: (user: any) => void;

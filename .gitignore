@@ -6,6 +6,8 @@ __pycache__/
 .env
 .env.*
 !.env.example
+!backend/.env
+!frontend/.env
 node_modules/
 dist/
 build/
@@ -21,4 +23,3 @@ venv/
 .vscode/
 .cache/
 .turbo/
-!frontend/.env

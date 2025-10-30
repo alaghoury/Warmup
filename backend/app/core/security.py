@@ -27,7 +27,7 @@ def create_access_token(subject: str, expires_minutes: int | None = None) -> str
     expire_delta = timedelta(minutes=expires_minutes or settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     expire = datetime.utcnow() + expire_delta
     to_encode: Dict[str, Any] = {"sub": subject, "exp": expire}
-    return jwt.encode(to_encode, settings.JWT_SECRET, algorithm=settings.JWT_ALG)
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.JWT_ALG)
 
 
 def get_access_token_expires_in(expires_minutes: int | None = None) -> int:

@@ -48,6 +48,18 @@ npm run dev
 The frontend dev server runs at <http://localhost:5173> and reads the API base URL from `VITE_API_URL` (defaults to
 `http://127.0.0.1:8000/api`).
 
+## One-command developer setup (PowerShell)
+
+A convenience script provisions both runtimes and launches the dev servers:
+
+```powershell
+# From the repository root
+./dev.ps1
+```
+
+The script creates `.venv` if missing, installs backend requirements, applies Alembic migrations, installs frontend
+dependencies, and starts `uvicorn` alongside `npm run dev`. Use `Ctrl+C` to stop the background processes.
+
 ## Environment variables
 
 Copy `.env.example` to `.env` and adjust values as needed. Notable keys:
@@ -55,7 +67,8 @@ Copy `.env.example` to `.env` and adjust values as needed. Notable keys:
 | Variable | Description |
 | --- | --- |
 | `DATABASE_URL` | SQLite by default. Point to Postgres for production (e.g. `postgresql+psycopg://warmup:warmup@db:5432/warmup`). |
-| `JWT_SECRET` | Secret key for signing JWT access tokens. |
+| `SECRET_KEY` | Secret key for signing JWT access tokens. |
+| `SEED_SUPERUSER` | When `true`, the startup job ensures the configured admin account exists and stays active. |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Initial superuser credentials seeded on startup. |
 | `VITE_API_URL` | Frontend base URL for API requests. |
 
