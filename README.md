@@ -69,7 +69,7 @@ Copy `.env.example` to `.env` and adjust values as needed. Notable keys:
 | `DATABASE_URL` | SQLite by default. Point to Postgres for production (e.g. `postgresql+psycopg://warmup:warmup@db:5432/warmup`). |
 | `SECRET_KEY` | Secret key for signing JWT access tokens. |
 | `SEED_SUPERUSER` | When `true`, the startup job ensures the configured admin account exists and stays active. |
-| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Initial superuser credentials seeded on startup. |
+| `SUPERUSER_EMAIL`, `SUPERUSER_PASSWORD` | Initial superuser credentials seeded on startup. |
 | `VITE_API_URL` | Frontend base URL for API requests. |
 
 ## Docker Compose stack

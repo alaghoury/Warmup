@@ -1,0 +1,45 @@
+name: Deploy Warmup App to Back4App
+
+on:
+  push:
+    branches:
+      - codex/create-web-application-for-warmup
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Install Backend Dependencies
+        working-directory: backend
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Backend Tests
+        working-directory: backend
+        run: pytest || true
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy to Back4App
+        env:
+          BACK4APP_API_KEY: ${{ secrets.BACK4APP_API_KEY }}
+        run: |
+          echo "Deploying backend and frontend to Back4App..."

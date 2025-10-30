@@ -12,10 +12,15 @@ from app.routes import admin, analytics, auth, subscriptions, users
 
 app = FastAPI(title="Warmup SaaS", openapi_url="/openapi.json")
 
+cors_origins = settings.CORS_ORIGINS
+allow_credentials = True
+if cors_origins == ["*"]:
+    allow_credentials = False
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
