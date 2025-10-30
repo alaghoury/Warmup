@@ -33,3 +33,23 @@ class User(Base):
     subscriptions: Mapped[list["Subscription"]] = relationship(
         "Subscription", back_populates="user", cascade="all, delete-orphan"
     )
+
+    @property
+    def username(self) -> str:
+        """Alias for compatibility with instructions expecting a ``username`` field."""
+
+        return self.name
+
+    @username.setter
+    def username(self, value: str) -> None:
+        self.name = value
+
+    @property
+    def is_superuser(self) -> bool:
+        """Mirror ``is_admin`` to satisfy interfaces that expect ``is_superuser``."""
+
+        return self.is_admin
+
+    @is_superuser.setter
+    def is_superuser(self, value: bool) -> None:
+        self.is_admin = value
