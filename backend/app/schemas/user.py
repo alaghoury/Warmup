@@ -1,15 +1,20 @@
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class UserBase(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     email: EmailStr
-    name: str
+    name: str = Field(..., alias="username")
 
 
 class UserCreate(UserBase):
     password: str = Field(min_length=6)
+    is_active: bool = True
+    is_admin: bool = False
+    is_superuser: bool | None = None
 
 
 class UserOut(UserBase):
