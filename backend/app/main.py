@@ -94,6 +94,9 @@ def on_startup() -> None:
 
 @app.on_event("startup")
 def create_default_admin() -> None:
+    if not settings.SEED_SUPERUSER:
+        return
+
     db = SessionLocal()
     try:
         admin_email = settings.ADMIN_EMAIL
