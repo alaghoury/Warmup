@@ -1,0 +1,6 @@
+FROM python:3.11-slim
+WORKDIR /app/backend
+COPY backend/requirements.txt /app/backend/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+COPY backend /app/backend
+CMD ["python","-c","from app.worker import queue; import rq; import os; from redis import Redis; rq.Worker(['warming'], connection=Redis.from_url(os.getenv('REDIS_URL','redis://redis:6379/0'))).work()"]
