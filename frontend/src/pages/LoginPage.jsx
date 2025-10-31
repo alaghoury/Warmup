@@ -1,22 +1,38 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { fetchFromAPI } from "../lib/api";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const API_URL = import.meta.env.VITE_API_URL;
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
-      localStorage.setItem("token", res.data.access_token);
-      navigate("/dashboard");
+      const data = await fetchFromAPI("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      const { access_token: token, user } = data ?? {};
+      if (token) {
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem("token", token);
+          if (user?.name) {
+            window.localStorage.setItem("user", user.name);
+          }
+        }
+        navigate("/dashboard");
+      } else {
+        throw new Error("Missing access token");
+      }
     } catch (err) {
-      setError("Invalid email or password");
+      console.error(err);
+      setError(err?.message || "Invalid email or password");
     }
   };
 
@@ -30,6 +46,7 @@ export default function LoginPage() {
           className="border p-2 rounded"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
         <input
           type="password"
@@ -37,6 +54,7 @@ export default function LoginPage() {
           className="border p-2 rounded"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
         />
         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
         <button className="bg-blue-600 text-white p-2 rounded hover:bg-blue-700">
