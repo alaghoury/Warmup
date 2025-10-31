@@ -5,7 +5,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Copy backend dependency list
-COPY backend/requirements.txt ./requirements.txt
+COPY backend/requirements.txt ./
 
 # Install system deps (build wheels if needed), then Python deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
