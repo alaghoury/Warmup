@@ -1,14 +1,32 @@
+import os
+import subprocess
 from sqlalchemy.orm import Session
 from app import models
-from app.core.database import SessionLocal
+from app.core.database import engine, Base, SessionLocal
 from app.core.security import get_password_hash
 
-def seed_superuser():
+def apply_migrations() -> None:
+    alembic_path = "/app/alembic.ini"
+    if not os.path.exists(alembic_path):
+        print(f"⚠️ Alembic config not found at {alembic_path}, running fallback SQLAlchemy create_all()")
+        Base.metadata.create_all(bind=engine)
+        return
+
+    try:
+        print("🧱 Applying Alembic migrations...")
+        subprocess.run(["alembic", "-c", alembic_path, "upgrade", "head"], check=True)
+        print("✅ Alembic migrations applied successfully.")
+    except subprocess.CalledProcessError as exc:  # pragma: no cover - best effort logging
+        print(f"❌ Alembic migration failed: {exc}. Running fallback create_all().")
+        Base.metadata.create_all(bind=engine)
+
+def seed_superuser() -> None:
     db: Session = SessionLocal()
     try:
         superuser_email = "mohammedalaghoury@gmail.com"
-        existing_user = db.query(models.User).filter(models.User.email == superuser_email).first()
-        if not existing_user:
+        existing = db.query(models.User).filter(models.User.email == superuser_email).first()
+
+        if not existing:
             user = models.User(
                 username="mohammed",
                 email=superuser_email,
@@ -20,11 +38,11 @@ def seed_superuser():
             db.commit()
             print("✅ Superuser 'mohammed' created successfully.")
         else:
-            existing_user.is_superuser = True
-            existing_user.is_active = True
+            existing.is_superuser = True
+            existing.is_active = True
             db.commit()
-            print("ℹ️ Superuser already exists. Updated to ensure active & superuser privileges.")
-    except Exception as e:
-        print(f"❌ Error creating superuser: {e}")
+            print("ℹ️ Superuser already exists and was updated.")
+    except Exception as exc:  # pragma: no cover - best effort logging
+        print(f"❌ Error creating superuser: {exc}")
     finally:
         db.close()

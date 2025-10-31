@@ -1,19 +1,18 @@
 from fastapi import FastAPI
-from app.startup import seed_superuser
+from app.startup import apply_migrations, seed_superuser
 
 app = FastAPI()
 
+
 @app.on_event("startup")
-def on_startup():
+def startup() -> None:
     print("🚀 Application starting...")
-    try:
-        seed_superuser()
-        print("✅ Superuser seeding complete.")
-    except Exception as e:
-        print(f"⚠️ Error during startup: {e}")
+    apply_migrations()
+    seed_superuser()
+
 
 @app.get("/health")
-def health_check():
+def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
