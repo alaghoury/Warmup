@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -41,12 +40,27 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=AuthResponse)
-def login(
-    form: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db),
-):
-    user = db.query(User).filter(User.email == form.username).first()
-    if not user or not verify_password(form.password, user.hashed_password):
+async def login(request: Request, db: Session = Depends(get_db)):
+    email: str | None = None
+    password: str | None = None
+
+    content_type = request.headers.get("content-type", "")
+    if content_type.startswith("application/json"):
+        body = await request.json()
+        email = body.get("email") or body.get("username")
+        password = body.get("password")
+    else:
+        form = await request.form()
+        email = form.get("username") or form.get("email")
+        password = form.get("password")
+
+    if not email or not password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Email and password are required"
+        )
+
+    user = db.query(User).filter(User.email == email).first()
+    if not user or not verify_password(password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect email or password"
         )

@@ -7,12 +7,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libffi-dev \
     libssl-dev \
     python3-dev \
+    nodejs \
+    npm \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt ./
+COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY frontend ./frontend
+RUN cd frontend && npm install && npm run build
+
+COPY backend ./
+
+RUN mkdir -p app/static && rm -rf app/static/*
+RUN cp -r frontend/dist/* app/static/
 
 EXPOSE 8000
 
