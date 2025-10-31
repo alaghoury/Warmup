@@ -1,0 +1,5 @@
+pycache/
+.env
+.git
+.venv
+frontend/
