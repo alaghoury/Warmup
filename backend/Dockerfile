@@ -1,6 +1,8 @@
 # Use official lightweight Python
 FROM python:3.11-slim
 
+# force rebuild
+
 # Workdir inside the image
 WORKDIR /app
 
