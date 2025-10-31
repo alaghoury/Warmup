@@ -2,6 +2,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
@@ -43,7 +44,11 @@ def health_check() -> dict[str, str]:
 
 static_dir = Path(__file__).parent / "static"
 if (static_dir / "index.html").exists():
-    app.mount("/", StaticFiles(directory=static_dir, html=True), name="frontend")
+    app.mount("/app", StaticFiles(directory=static_dir, html=True), name="frontend")
+
+    @app.get("/ui", include_in_schema=False)
+    def ui_redirect() -> RedirectResponse:
+        return RedirectResponse(url="/app/index.html")
 
 
 if __name__ == "__main__":

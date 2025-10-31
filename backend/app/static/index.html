@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Warmup Users</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f8f9fa; padding:40px; }
+    h1 { color:#2c3e50; }
+    form { background:#fff; padding:20px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,.1); width:320px; margin-bottom:20px; }
+    input { display:block; width:100%; margin-bottom:10px; padding:8px; border:1px solid #ccc; border-radius:5px; }
+    button { background:#007bff; color:#fff; border:none; padding:10px; border-radius:5px; cursor:pointer; }
+    button:hover { background:#0056b3; }
+    table { border-collapse:collapse; width:100%; background:#fff; box-shadow:0 2px 5px rgba(0,0,0,.05); }
+    th, td { padding:10px; border-bottom:1px solid #ddd; }
+    th { background:#007bff; color:#fff; text-align:left; }
+    .actions button { background:#dc3545; }
+    .actions button:hover { background:#a71d2a; }
+  </style>
+</head>
+<body>
+  <h1>Warmup Users</h1>
+  <p>Simple UI served from the FastAPI backend. Interacts with the <code>/api/users</code> endpoints.</p>
+  <form id="userForm">
+    <input type="text" id="name" placeholder="Name" required />
+    <input type="email" id="email" placeholder="Email" required />
+    <button type="submit">Add User</button>
+  </form>
+  <h2>Registered Users</h2>
+  <table id="usersTable">
+    <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Actions</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <script>
+    const API_URL = "/api/users";
+    async function fetchUsers() {
+      const res = await fetch(API_URL);
+      const users = await res.json();
+      const tbody = document.querySelector("#usersTable tbody");
+      tbody.innerHTML = "";
+      users.forEach(u => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${u.id}</td><td>${u.name}</td><td>${u.email}</td><td class="actions"><button data-id="${u.id}">Delete</button></td>`;
+        row.querySelector("button").addEventListener("click", () => deleteUser(u.id));
+        tbody.appendChild(row);
+      });
+    }
+    async function addUser(name, email) {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password: "changeme123" })
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.detail || "Failed to add user");
+      }
+      fetchUsers();
+    }
+    async function deleteUser(id) {
+      const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.detail || "Failed to delete user");
+      }
+      fetchUsers();
+    }
+    document.querySelector("#userForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.querySelector("#name").value;
+      const email = document.querySelector("#email").value;
+      await addUser(name, email);
+      document.querySelector("#name").value = "";
+      document.querySelector("#email").value = "";
+    });
+    fetchUsers();
+  </script>
+</body>
+</html>

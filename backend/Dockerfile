@@ -1,27 +1,24 @@
+# Use official lightweight Python
 FROM python:3.11-slim
 
+# Workdir inside the image
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libffi-dev \
-    libssl-dev \
-    python3-dev \
-    nodejs \
-    npm \
-    && rm -rf /var/lib/apt/lists/*
-
+# Copy backend dependency list
 COPY backend/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
 
-COPY frontend ./frontend
-RUN cd frontend && npm install && npm run build
+# Install system deps (build wheels if needed), then Python deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential libffi-dev libssl-dev python3-dev && \
+    pip install --no-cache-dir -r requirements.txt && \
+    apt-get purge -y build-essential python3-dev && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY backend ./
+# Copy the backend app code
+COPY backend/app ./app
 
-RUN mkdir -p app/static && rm -rf app/static/*
-RUN cp -r frontend/dist/* app/static/
-
+# Expose FastAPI
 EXPOSE 8000
 
+# Launch API
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
