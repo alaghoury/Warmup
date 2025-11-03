@@ -9,6 +9,12 @@ from .subscription import (
 )
 from .user import UserCreate, UserOut
 from .warmup import WarmupActivityRead, WarmupInsight
+from .integration import (
+    IntegrationConnectRequest,
+    IntegrationConnectResponse,
+    IntegrationTestRequest,
+    IntegrationTestResponse,
+)
 
 __all__ = [
     "AdminStats",
@@ -23,4 +29,8 @@ __all__ = [
     "UserOut",
     "WarmupActivityRead",
     "WarmupInsight",
+    "IntegrationConnectRequest",
+    "IntegrationConnectResponse",
+    "IntegrationTestRequest",
+    "IntegrationTestResponse",
 ]

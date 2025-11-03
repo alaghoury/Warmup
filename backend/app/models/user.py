@@ -15,6 +15,7 @@ BaseModel = Base  # type: ignore
 
 if TYPE_CHECKING:  # pragma: no cover - circular import guard for type checkers
     from .subscription import Subscription
+    from .email_account import EmailAccount
 
 
 class User(Base):
@@ -32,6 +33,9 @@ class User(Base):
 
     subscriptions: Mapped[list["Subscription"]] = relationship(
         "Subscription", back_populates="user", cascade="all, delete-orphan"
+    )
+    email_accounts: Mapped[list["EmailAccount"]] = relationship(
+        "EmailAccount", back_populates="user", cascade="all, delete-orphan"
     )
 
     @property

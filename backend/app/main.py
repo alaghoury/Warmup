@@ -6,7 +6,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
-from app.routes import admin, analytics, auth, subscriptions, users
+from app.routes import admin, analytics, auth, integrations, subscriptions, users
 from app.routers import warmup
 from app.startup import apply_migrations, seed_superuser
 
@@ -35,6 +35,7 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(subscriptions.router)
 app.include_router(analytics.router)
+app.include_router(integrations.router)
 app.include_router(admin.router, prefix="/api/v1/admin")
 app.include_router(warmup.router, prefix="/api/warmup")
 
