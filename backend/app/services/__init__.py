@@ -12,6 +12,12 @@ from .warmup_service import (
     send_test_email,
     warmup_cycle,
 )
+from .spam_check_service import analyze_warmup_message, summarize_domain_scores
+from .reputation_service import (
+    refresh_account_reputation,
+    refresh_reputation_scores,
+    get_reputation_stats,
+)
 
 __all__ = [
     "send_email_mock",
@@ -26,4 +32,9 @@ __all__ = [
     "compute_daily_quota",
     "warmup_cycle",
     "reset_daily_quota",
+    "analyze_warmup_message",
+    "summarize_domain_scores",
+    "refresh_reputation_scores",
+    "refresh_account_reputation",
+    "get_reputation_stats",
 ]

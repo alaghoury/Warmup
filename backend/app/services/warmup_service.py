@@ -13,6 +13,8 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models import EmailAccount, WarmupActivity
 from app.services.ai_reply_service import generate_human_reply
+from app.services.spam_check_service import analyze_warmup_message
+from app.services.reputation_service import refresh_reputation_scores
 
 logger = logging.getLogger(__name__)
 
@@ -302,7 +304,14 @@ async def _run_warmup_iteration(db: Session, account: EmailAccount) -> None:
     """Execute the warmup sequence once for a given account."""
 
     for step in WARMUP_SEQUENCE:
-        await step(db, account=account)
+        activity = await step(db, account=account)
+        if step is send_test_email:
+            await analyze_warmup_message(
+                db,
+                account,
+                activity,
+                sample="Warmup cadence verification email",
+            )
     _DAILY_SENDS[account.id] += 1
     logger.info(
         "Completed warmup iteration for account %s (%s/%s)",
@@ -324,6 +333,8 @@ async def warmup_cycle() -> None:
             if sent >= quota:
                 continue
             await _run_warmup_iteration(session, account)
+        if accounts:
+            refresh_reputation_scores(session, accounts)
     finally:
         session.close()
 

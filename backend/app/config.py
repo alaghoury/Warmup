@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     SUPERUSER_NAME: str = Field("mohammed", alias="SUPERUSER_NAME")
     SUPERUSER_EMAIL: str = Field("mohammedalaghoury@gmail.com", alias="SUPERUSER_EMAIL")
     SUPERUSER_PASSWORD: str = Field("Moh2611", alias="SUPERUSER_PASSWORD")
+    SPAM_CHECK_API_URL: str | None = Field(None, alias="SPAM_CHECK_API_URL")
+    SPAM_CHECK_API_KEY: str | None = Field(None, alias="SPAM_CHECK_API_KEY")
+    REPUTATION_ALERT_THRESHOLD: float = Field(15.0, alias="REPUTATION_ALERT_THRESHOLD")
 
     class Config:
         env_file = ".env"

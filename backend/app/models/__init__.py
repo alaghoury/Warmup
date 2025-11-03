@@ -6,6 +6,8 @@ from .email_account import EmailAccount
 from .subscription import Subscription
 from .usage import UsageLog
 from .warmup_activity import WarmupActivity
+from .warmup_message import WarmupMessage
+from .reputation_history import ReputationHistory
 
 __all__ = [
     "User",
@@ -13,5 +15,7 @@ __all__ = [
     "Subscription",
     "UsageLog",
     "WarmupActivity",
+    "WarmupMessage",
+    "ReputationHistory",
     "EmailAccount",
 ]
