@@ -16,3 +16,9 @@ class WarmupActivityRead(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class WarmupInsight(BaseModel):
+    key: str
+    title: str
+    description: str

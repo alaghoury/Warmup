@@ -1,6 +1,7 @@
 from .warming import send_email_mock
 from .warmup_service import (
     WARMUP_SEQUENCE,
+    get_warmup_benefits,
     mark_as_important,
     mark_as_non_spam,
     open_email,
@@ -16,4 +17,5 @@ __all__ = [
     "mark_as_important",
     "reply_to_email",
     "WARMUP_SEQUENCE",
+    "get_warmup_benefits",
 ]

@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 
 from app.deps import get_current_user, get_db
 from app.models import WarmupActivity
-from app.schemas import WarmupActivityRead
-from app.services.warmup_service import WARMUP_SEQUENCE
+from app.schemas import WarmupActivityRead, WarmupInsight
+from app.services.warmup_service import WARMUP_SEQUENCE, get_warmup_benefits
 
 router = APIRouter(tags=["warmup"])
 
@@ -38,3 +38,12 @@ async def start_warmup(
         activity = await step(db)
         results.append(activity)
     return results
+
+
+@router.get("/insights", response_model=list[WarmupInsight])
+def warmup_insights(
+    current_user=Depends(get_current_user),
+) -> list[WarmupInsight]:
+    """Expose marketing insights that describe the warmup automation benefits."""
+
+    return get_warmup_benefits()

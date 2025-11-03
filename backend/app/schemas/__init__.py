@@ -8,7 +8,7 @@ from .subscription import (
     UsageSummary,
 )
 from .user import UserCreate, UserOut
-from .warmup import WarmupActivityRead
+from .warmup import WarmupActivityRead, WarmupInsight
 
 __all__ = [
     "AdminStats",
@@ -22,4 +22,5 @@ __all__ = [
     "UserCreate",
     "UserOut",
     "WarmupActivityRead",
+    "WarmupInsight",
 ]
