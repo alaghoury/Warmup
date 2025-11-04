@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchFromAPI } from "../lib/api";
+import { apiRequest } from "../lib/api";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -11,7 +11,7 @@ export default function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const data = await fetchFromAPI("/api/v1/auth/login", {
+      const data = await apiRequest("/v1/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

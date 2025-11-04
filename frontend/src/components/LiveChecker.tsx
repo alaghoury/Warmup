@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { fetchFromAPI } from "../lib/api";
+import { apiRequest } from "../lib/api";
 
 export default function LiveChecker() {
   const [domain, setDomain] = useState("example.com");
@@ -14,7 +14,9 @@ export default function LiveChecker() {
     setLoading(true);
     setError("");
     try {
-      const data = await fetchFromAPI(`/api/v1/check/domain?domain=${encodeURIComponent(domain)}`);
+      const data = await apiRequest(
+        `/v1/check/domain?domain=${encodeURIComponent(domain)}`,
+      );
       setResult(data);
     } catch (err: any) {
       setError(err.message || "Failed to check domain");

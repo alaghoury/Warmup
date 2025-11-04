@@ -45,7 +45,7 @@ npm install
 npm run dev
 ```
 
-The frontend dev server runs at <http://localhost:5173> and reads the API base URL from `VITE_API_URL` (defaults to
+The frontend dev server runs at <http://localhost:5173> and reads the API base URL from `VITE_BACKEND_URL` (defaults to
 `http://127.0.0.1:8000/api`).
 
 ## One-command developer setup (PowerShell)
@@ -70,7 +70,7 @@ Copy `.env.example` to `.env` and adjust values as needed. Notable keys:
 | `SECRET_KEY` | Secret key for signing JWT access tokens. |
 | `SEED_SUPERUSER` | When `true`, the startup job ensures the configured admin account exists and stays active. |
 | `SUPERUSER_EMAIL`, `SUPERUSER_PASSWORD` | Initial superuser credentials seeded on startup. |
-| `VITE_API_URL` | Frontend base URL for API requests. |
+| `VITE_BACKEND_URL` | Frontend base URL for API requests. |
 
 ## Docker Compose stack
 
@@ -134,3 +134,6 @@ pytest -q
 
 > **Note:** Installing Python dependencies may require outbound internet access. If package installation is blocked the tests
 > cannot run locally; CI should cover the suite instead.
+
+<!-- connectivity test 2025-11-04 -->
+<!-- connectivity test 2025-11-04 -->

@@ -1,9 +1,9 @@
-{
-  "default_branch": "codex/create-web-application-for-warmup-qniw6j",
-  "auto_branch_creation": false,
-  "auto_pull_requests": false,
-  "commit_mode": "direct",
-  "commit_template": "{type}({scope}): {message}",
-  "enforce_branch": true,
-  "sync_with_back4app": true
-}
+branch: codex/reset-codex-state-for-repository
+commit_mode: direct
+auto_branch_creation: false
+pull_request_creation: false
+deploy_target: Back4App
+deploy_settings:
+  root_directory: ./backend
+  dockerfile_path: backend/Dockerfile.rebuild
+  port: 8000

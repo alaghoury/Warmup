@@ -1,0 +1,44 @@
+{
+  "codex": {
+    "config_path": "/workspace/Warmup/.codexconfig",
+    "environment": {
+      "auto_branch_creation": false,
+      "auto_pull_requests": false,
+      "commit_mode": "direct",
+      "enforce_branch": true
+    },
+    "loaded_configuration": {
+      "auto_branch_creation": false,
+      "auto_pull_requests": false,
+      "commit_mode": "direct",
+      "commit_template": "{type}({scope}): {message}",
+      "default_branch": "codex/create-web-application-for-warmup-qniw6j",
+      "enforce_branch": true,
+      "pre_commit_validation": true,
+      "sync_with_back4app": true,
+      "validation_steps": {
+        "1": "Fetch latest branch state from GitHub",
+        "2": "Query Back4App deployment logs for this branch via API",
+        "3": "Compare timestamps and checksums of backend/Dockerfile, backend/requirements.txt, and frontend/package.json",
+        "4": "If mismatch detected \u2192 halt commit and log 'Branch out of sync with Back4App, please rebuild before commit'",
+        "5": "If in sync \u2192 proceed with commit normally"
+      }
+    }
+  },
+  "created_at": "2025-11-04T13:49:44Z",
+  "name": "warmup_main_snapshot_01",
+  "repository": {
+    "active_branch": "codex/create-web-application-for-warmup-qniw6j",
+    "root": "/workspace/Warmup",
+    "root_files": [
+      "README.md",
+      "backend/",
+      "frontend/",
+      "ops/",
+      "tests/",
+      "tools/",
+      "docker-compose.yml",
+      "dev.ps1"
+    ]
+  }
+}

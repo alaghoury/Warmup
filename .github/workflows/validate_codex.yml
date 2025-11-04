@@ -1,0 +1,23 @@
+name: Validate Codex Configuration
+
+on:
+  push:
+    branches:
+      - codex/create-web-application-for-warmup-qniw6j
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: pip install --upgrade pip
+      - name: Run Codex config validation
+        run: python tools/validate_codex_config.py

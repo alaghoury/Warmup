@@ -1,13 +1,13 @@
 "use client";
 import { useState } from "react";
-import { fetchFromAPI } from "@/lib/api";
+import { apiRequest } from "@/lib/api";
 
 export default function HomePage() {
   const [status, setStatus] = useState("Click to ping API");
 
   async function ping() {
     try {
-      const data = await fetchFromAPI("/");
+      const data = await apiRequest("/v1/health");
       setStatus(JSON.stringify(data));
     } catch (err: any) {
       setStatus(err.message);

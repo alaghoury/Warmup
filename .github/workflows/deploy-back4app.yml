@@ -1,0 +1,31 @@
+name: Auto Deploy to Back4App
+
+on:
+  push:
+    branches:
+      - codex/create-web-application-for-warmup-qniw6j
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          cd ../frontend
+          npm install
+
+      - name: Trigger Back4App build
+        env:
+          BACK4APP_TOKEN: ${{ secrets.BACK4APP_TOKEN }}
+          BACK4APP_APP_ID: ${{ secrets.BACK4APP_APP_ID }}
+        run: |
+          curl -X POST "https://containers.back4app.com/deploy" \
+            -H "Content-Type: application/json" \
+            -H "X-Parse-Application-Id: $BACK4APP_APP_ID" \
+            -H "X-Parse-REST-API-Key: $BACK4APP_TOKEN" \
+            -d '{"branch":"codex/create-web-application-for-warmup-qniw6j"}'
