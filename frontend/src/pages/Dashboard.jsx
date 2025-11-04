@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { API_BASE_URL, fetchFromAPI } from "../lib/api";
+import { API_BASE_URL, apiRequest } from "../lib/api";
 import LiveChecker from "../components/LiveChecker";
 
 export default function Dashboard() {
@@ -17,7 +17,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     let mounted = true;
-    fetchFromAPI("/api/v1/health")
+    apiRequest("/v1/health")
       .then((res) => {
         if (!mounted) return;
         setStatus(res?.status === "ok" ? "ok" : "unknown");
@@ -36,7 +36,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     let mounted = true;
-    fetchFromAPI("/api/v1/reputation/stats")
+    apiRequest("/v1/reputation/stats")
       .then((data) => {
         if (!mounted) return;
         setReputation(data);

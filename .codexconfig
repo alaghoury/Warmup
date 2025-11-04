@@ -5,5 +5,13 @@
   "commit_mode": "direct",
   "commit_template": "{type}({scope}): {message}",
   "enforce_branch": true,
-  "sync_with_back4app": true
+  "sync_with_back4app": true,
+  "pre_commit_validation": true,
+  "validation_steps": {
+    "1": "Fetch latest branch state from GitHub",
+    "2": "Query Back4App deployment logs for this branch via API",
+    "3": "Compare timestamps and checksums of backend/Dockerfile, backend/requirements.txt, and frontend/package.json",
+    "4": "If mismatch detected → halt commit and log 'Branch out of sync with Back4App, please rebuild before commit'",
+    "5": "If in sync → proceed with commit normally"
+  }
 }
