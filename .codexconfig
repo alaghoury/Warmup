@@ -1,0 +1,9 @@
+{
+  "default_branch": "codex/create-web-application-for-warmup-qniw6j",
+  "auto_branch_creation": false,
+  "auto_pull_requests": false,
+  "commit_mode": "direct",
+  "commit_template": "{type}({scope}): {message}",
+  "enforce_branch": true,
+  "sync_with_back4app": true
+}
